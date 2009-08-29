@@ -9,6 +9,7 @@
   <artifactId>scala-tools-server</artifactId>
   <version>0.1-SNAPSHOT</version>
   <name>${project.artifactId}</name>
+  <description>experimental http server to run tools like compilation (target to replace fsc+fsc-server)</description>
   <inceptionYear>2009</inceptionYear>
 
   <properties>
