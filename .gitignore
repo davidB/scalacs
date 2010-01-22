@@ -10,6 +10,7 @@ build.log
 .project
 .classpath
 .manager
+.externalToolBuilders
 
 # ignore sbt
 target
@@ -19,6 +20,10 @@ project/build/target
 project/plugins/target
 project/plugins/lib_managed
 project/plugins/src_managed
+
+# ignore IDEA
+.idea
+*.iml
 
 # ignore ctags/etags
 TAGS
