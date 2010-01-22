@@ -1,4 +1,4 @@
-package org.scala_tools.server
+package net_alchim31_scalacs
 
 object RegExpUtil {
   import java.util.ArrayDeque

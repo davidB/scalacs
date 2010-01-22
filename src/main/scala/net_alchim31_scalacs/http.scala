@@ -1,4 +1,4 @@
-package org.scala_tools.server
+package net_alchim31_scalacs
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
@@ -14,7 +14,9 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
  * @author david.bernard
  * @based on code from org.jboss.netty.example.http.file
  */
+//TODO add start and stop method
 object HttpServer {
+
     def main(args : Array[String]) {
       // Configure the server.
       val bootstrap = new ServerBootstrap(
@@ -81,7 +83,8 @@ class HttpStaticFileServerHandler(_compilerSrv : CompilerService4Group) extends 
     ),
     List(
       "-deprecation"
-    )
+    ),
+    None
   )
 
   override
@@ -127,6 +130,11 @@ class HttpStaticFileServerHandler(_compilerSrv : CompilerService4Group) extends 
     val contentType = request.getHeader(HttpHeaders.Names.CONTENT_TYPE)
 
     decoded.getPath match {
+      case "/stop" => {
+  System.exit(0)//TODO make are clean smooth stop
+  Right("stopping")
+      }
+      case "/ping" => Right("pong") //TODO return the version of the scala compiler (later provide info about tools)
       case "/mem" => {
         val runtime = Runtime.getRuntime()
         val txt = ("total memory = "+ runtime.totalMemory
@@ -158,6 +166,12 @@ class HttpStaticFileServerHandler(_compilerSrv : CompilerService4Group) extends 
               case v => v.asInstanceOf[java.util.List[String]].toList
             }
           }
+          def toFileOption(k : String) : Option[File] = {
+            data.get(k) match {
+              case null => None
+              case v => Some(new File(v.toString))
+            }
+          }
           val cfg = new SingleConfig(
             toStr("name", "xxx"),
             toStrList("sourceDirs").map(new File(_)),
@@ -165,9 +179,10 @@ class HttpStaticFileServerHandler(_compilerSrv : CompilerService4Group) extends 
             toStrList("excludes").map(RegExpUtil.globToRegexPattern(_)),
             new File(toStr("targetDir", "/tmp/target")),
             toStrList("classpath").map(new File(_)),
-            toStrList("args")
+            toStrList("args"),
+            toFileOption("exported"),
           )
-          _compilerSrv.add(new CompilerService4Single(cfg))
+          _compilerSrv.add(new CompilerService4Single(cfg, Some(_compilerSrv)))
           txt += "added " + data + " :: " + cfg + "\n"
           counter += 1
         }
@@ -184,10 +199,21 @@ class HttpStaticFileServerHandler(_compilerSrv : CompilerService4Group) extends 
         Right(_compilerSrv.clean())
       }
       case "/compile" => {
-        Right(_compilerSrv.compile())
+        Right(_compilerSrv.compile(System.currentTimeMillis, true).map(_.out).mkString("\n"))
       }
       case "/clean-compile" => {
-        Right(_compilerSrv.clean() + "\n" + _compilerSrv.compile())
+        Right(_compilerSrv.clean() + "\n" + _compilerSrv.compile(System.currentTimeMillis, true).map(_.out).mkString("\n"))
+      }
+      case "/" => {
+        Right("""usage :
+          /mem : display memory information
+          /add : add project (send definition as yaml in content of the request)
+                 ex : 'curl http://127.0.0.1:27616/add --data-binary @sample.yaml'
+          /reset : reset compilers
+          /clean
+          /compile
+          /clean-compile
+        """)
       }
       case unknown => {
         println("unsupported operation : " + unknown)
