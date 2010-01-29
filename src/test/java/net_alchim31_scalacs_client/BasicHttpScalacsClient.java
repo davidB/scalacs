@@ -25,10 +25,10 @@ public abstract class BasicHttpScalacsClient {
     public String sendRequestCreateOrUpdate(String yamlDef) throws Exception {
         String back = "";
         try {
-            back = sendRequest("add", yamlDef);
+            back = sendRequest("createOrUpdate", yamlDef);
         } catch (java.net.ConnectException exc) {
             startNewServer();
-            back = sendRequest("add", yamlDef);
+            back = sendRequest("createOrUpdate", yamlDef);
         }
         return back;
     }
