@@ -24,7 +24,10 @@ copy the latest jar (scalacs-X.Y-withDeps) from scala-tools.org :
 
 Server startup
 --------------
-java -jar target/scalacs-0.1-withDeps.jar
+
+>  java -jar target/scalacs-0.1-withDeps_sc2.7.7.jar
+
+Or use scalacs-0.1.jar + dependencies (listed into pom.xml) from a maven repository.
 
 HTTP Interface
 --------------
@@ -32,6 +35,8 @@ HTTP Interface
 h3. help, usage
 
 simply call http://127.0.0.1:27616/
+
+Note : multi line message use the character *§* in place of *\n* so editor could grab the full message in on-line (regexp)
 
 h3. createOrUpdate
 
@@ -80,6 +85,8 @@ HTTP GET to : http://127.0.0.1:27616/cleanCompiler
 TODO
 ----
 
+* deploy scalacs into central repository
+* document output format
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
 * integrate xsbt launcher as bootstrap
 * provide support/version for several scala's version
