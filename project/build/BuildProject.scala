@@ -5,14 +5,14 @@ class BuildProject(info: ProjectInfo) extends DefaultProject(info)
 /*
   override val dependencies = List(
 	"org.jboss.netty" % "netty" % "3.1.0.GA" % "compile->default",
-   	"org.scala-lang" % "scala-compiler" % "2.7.5",
+   	"org.scala-lang" % "scala-compiler" % "2.7.7",
 	"junit" % "junit" % "4.5" % "test->default",
 	"SnakeYAML" % "SnakeYAML" % "1.3"
   )
 */
 
   val netty = "org.jboss.netty" % "netty" % "3.1.0.GA" % "compile->default"
-  val scala_compiler = "org.scala-lang" % "scala-compiler" % "2.7.5"
+  val scala_compiler = "org.scala-lang" % "scala-compiler" % "2.7.7"
   val junit = "junit" % "junit" % "4.5" % "test->default"
   val snakeyaml = "SnakeYAML" % "SnakeYAML" % "1.3"
 
