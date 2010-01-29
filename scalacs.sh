@@ -17,6 +17,6 @@ case $1 in
     ;;
   *)
     # $1 support compile, clean, reset, delete
-    curl ${URL}/$1/$2
+    curl ${URL}/$1?p=$2
     ;;
 esac
