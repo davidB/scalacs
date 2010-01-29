@@ -29,6 +29,10 @@ java -jar target/scalacs-0.1-withDeps.jar
 HTTP Interface
 --------------
 
+h3. help, usage
+
+simply call http://127.0.0.1:27616/
+
 h3. createOrUpdate
 
 Request to createOrUpdate one or more project define in the Yaml syntax, each project definition should be separated by "---"
@@ -40,7 +44,7 @@ Fields :
 * excludes : filter to select file to not compile into sourceDirs(optional)
 * targetDir : place where to put generated .class
 * classpath : list of path (directory/jar) need to compile files from sourceDirs
-* dependency-link-path : the path of the jar/directory used by other project to reference the current project (optional)
+* exported : the path of the jar/directory used by other project to reference the current project (optional)
 * args : list of additional args to pass to the scalac compiler, could be ignored (depends of the backend)! (optional)
 
 Sample :
@@ -57,7 +61,7 @@ Sample :
     - "/home/dwayne/.m2/repository/org/scala-lang/scala-compiler/2.7.5/scala-compiler-2.7.5.jar"
     - "/home/dwayne/.m2/repository/org/jboss/netty/netty/3.1.0.GA/netty-3.1.0.GA.jar"
     - "/home/dwayne/.m2/repository/SnakeYAML/SnakeYAML/1.3/SnakeYAML-1.3.jar"
-  dependency-link-path : ""
+  exported : ""
   args :
     - "-deprecation"
 </code>
@@ -77,6 +81,9 @@ TODO
 ----
 
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
+* integrate xsbt launcher as bootstrap
+* provide support/version for several scala's version
 * do automatic cleanCompiler when dependency jar are modified
 * document output/log
 * integrate sts into maven-scala-plugin and YaScalaDT
+* add a plugin/extension engine (may be based on Guice, osgi)
