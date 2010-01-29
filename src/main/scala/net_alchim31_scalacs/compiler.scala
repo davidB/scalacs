@@ -4,7 +4,7 @@ import java.io.{BufferedOutputStream, File, FileOutputStream, PrintStream}
 import java.lang.{Runtime, System, Thread}
 
 import scala.tools.nsc.{Global, Settings,OfflineCompilerCommand}
-import scala.tools.nsc.reporters.{Reporter, ConsoleReporter}
+import scala.tools.nsc.reporters.{Reporter}
 import scala.tools.nsc.util.FakePos //Position
 import java.io.File
 import java.util.regex.{Pattern, PatternSyntaxException}
@@ -17,55 +17,58 @@ import java.util.regex.{Pattern, PatternSyntaxException}
 //TODO define CompilationGroup as Trait with Composite and Single implementation
 //TODO find a better name (eg, Builder, CompilerService)
 
-class CompileFeedback(
+///////////////////////////////////////////////////////////////////////////////
+// API
+///////////////////////////////////////////////////////////////////////////////
+
+trait CompilerService {
+  def reset(log : Logger)
+  def clean(log : Logger)
+  def compile(runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) : List[CompileFeedback]
+}
+
+class CompileFeedback (
   val runId : Long,
-  val out : CharSequence,
+  val projectName : String,
+  val events : EventCollector,
   val isChanged : Boolean,
   val isSuccess : Boolean
 ) {
-  def +(o : CompileFeedback) = {
-    if (runId != o.runId) {
-      throw new IllegalArgumentException("can't add CompileFeedback from differend runId :" + runId + " != " + o.runId)
-    }
-    new CompileFeedback(
-      runId,
-      out.toString + o.out.toString,
-      isChanged || o.isChanged,
-      isSuccess && o.isSuccess
-    )
-  }
-}
-
-trait CompilerService {
-  def reset() : CharSequence
-  def clean() : CharSequence
-  def compile(runId : Long, checkDeps : Boolean) : List[CompileFeedback]
+//  def +(o : CompileFeedback) = {
+//    if (runId != o.runId) {
+//      throw new IllegalArgumentException("can't add CompileFeedback from differend runId :" + runId + " != " + o.runId)
+//    }
+//    new CompileFeedback(
+//      runId,
+//      events + o.events,
+//      isChanged || o.isChanged,
+//      isSuccess && o.isSuccess
+//    )
+//  }
 }
 
 class CompilerService4Group extends CompilerService {
+
+  // manage group
   private
   var _group : List[CompilerService4Single] = Nil
 
-  def add(v : CompilerService4Single) : this.type = {
-    // should generate new name if name already exist or replace existing ??
-    _group = v :: _group.filter(_.cfg.name == v.cfg.name)
+  def createOrUpdate(v : CompilerService4Single) : this.type = {
+    _group = v :: _group.filter(_.cfg.name != v.cfg.name)
+    //TODO update dependency-link to avoid doing it each time via findByExported/findByTargetDir
     this
   }
 
-  def remove(v : CompilerService4Single) : this.type = {
-    // should generate new name if name already exist or replace existing ??
-    _group = _group.filter(_.cfg.name == v.cfg.name)
+  def removeByName(p : Pattern) : this.type = {
+    _group = _group.filter(i => !p.matcher(i.cfg.name).matches())
+    //TODO update dependency-link to avoid doing it each time via findByExported/findByTargetDir
     this
   }
 
   def size = _group.size
 
-  // dispatching
-  def reset() : CharSequence = _group.foldLeft("")((r,i) => r + i.reset().toString)
-  def clean() : CharSequence = _group.foldLeft("")((r,i) => r + i.clean().toString)
-  def compile(runId : Long, checkDeps : Boolean) = _group.flatMap(_.compile(runId, checkDeps))//.removeDuplicates()
+  def findByName(p : Pattern) = _group.filter(i => p.matcher(i.cfg.name).matches())
 
-  def findByName(p : Pattern) = _group.find(i => p.matcher(i.cfg.name).matches())
   def findByTargetDir(f : File) = {
     val apath = f.getCanonicalPath
     _group.find(i => apath == i.cfg.targetDir.getCanonicalPath)
@@ -76,6 +79,16 @@ class CompilerService4Group extends CompilerService {
     _group.find(i => i.cfg.exported.map( apath == _.getCanonicalPath).getOrElse(false))
   }
 
+  // dispatching
+  def reset(log : Logger) =  _group.foreach { i => i.reset(log.newChild(i.cfg.name)) }
+  def clean(log : Logger) = _group.foreach { i => i.clean(log.newChild(i.cfg.name)) }
+  def compile(runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) = compile(_group, runId, checkDeps, previousFeedback)
+  def compileByName(p : Pattern, runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) = compile(findByName(p), runId, checkDeps, previousFeedback)
+
+  private
+  def compile(group : List[CompilerService4Single], runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) = group.foldLeft(previousFeedback){(cumul, i) =>
+    i.compile(runId, checkDeps,cumul)
+  }
 }
 
 class SingleConfig (
@@ -89,6 +102,9 @@ class SingleConfig (
   val exported : Option[File]
 )
 
+///////////////////////////////////////////////////////////////////////////////
+// Implementation who use scalac
+///////////////////////////////////////////////////////////////////////////////
 class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Option[CompilerService4Group]) extends CompilerService {
 
   val MaxCharge = 0.8
@@ -100,18 +116,15 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
 
   private val runtime = Runtime.getRuntime()
 
+  //TODO service should be provide by an external (to all several implementation, raw (full scan), based of FS notification,...)
   private
   def findFilesToCompile(lastCompileTime : Long) : List[File] = {
-    def accept(file : File, rpath : String) : List[File] = {
+    def accept(file : File, rpath : String) : Boolean = {
       //TODO also recompile dependens file (try to use code from SBT)
-      val ok = ( true //file.lastModified() >= lastCompileTime
+      ( true //file.lastModified() >= lastCompileTime
         && cfg.sourceExcludes.forall(pattern => !pattern.matcher(rpath).matches())
         && cfg.sourceIncludes.forall(pattern => pattern.matcher(rpath).matches())
       )
-      ok match {
-        case true => List(file)
-        case false => Nil
-      }
     }
 
     def findFilesToCompile(rootDir : File, rpath : String) : List[File] = {
@@ -121,8 +134,8 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
         val rpathChild = rpath + "/" + child.getName
         if (child.isDirectory) {
           back = findFilesToCompile(rootDir, rpathChild) ::: back
-        } else {
-          back = accept(child, rpathChild) ::: back
+        } else if (accept(child, rpathChild)) {
+          back = child :: back
         }
       }
       back
@@ -131,12 +144,12 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
     cfg.sourceDirs.flatMap(s => findFilesToCompile(s, ""))
   }
 
-  def reset() : CharSequence = {
+  def reset(log : Logger) = {
     _compiler = null
-    "[Compile server was reset]\n"
+    log.info("compile server was reset")
   }
 
-  def clean() : CharSequence = {
+  def clean(log : Logger) = {
     def delete(f : File) : Boolean = {
       var back =  true
       if (f.isDirectory) {
@@ -152,12 +165,13 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
       back
     }
     delete(cfg.targetDir)
-    "[Compile server has deleted classes into " + cfg.targetDir + "]\n"
+    log.info("deleted classes into " + cfg.targetDir)
   }
 
   var _lastCompileFeedback = new CompileFeedback(
     java.lang.Long.MIN_VALUE,
-    "",
+    cfg.name,
+    new EventCollector(),
     false,
     true
   )
@@ -166,40 +180,63 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
   //TODO update reporter from compiler to use a new out for each action
   //TODO use the GraphNode mixin
   //TODO use LoggerMessage structure instead of CharSequence to store status, messages,...
-  def compile(runId : Long, checkDeps : Boolean) : List[CompileFeedback] = {
+  def compile(runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) : List[CompileFeedback] = {
     import java.io.{PrintWriter, StringWriter, StringReader, BufferedReader}
 
     if (runId <= _lastCompileFeedback.runId) {
       throw new Exception("old runId ('" + runId +"') requested after '" + _lastCompileFeedback.runId +"'")
     }
-
-    var back : List[CompileFeedback] = Nil
-
     if (runId == _lastCompileFeedback.runId) {
-      return List(_lastCompileFeedback)
+      return _lastCompileFeedback :: previousFeedback.filter(_.projectName != _lastCompileFeedback.projectName)
     }
+
+    var back = previousFeedback
+    val eventCollector = new EventCollector()
+    val eventLogger = new EventLogger(List("compiler", cfg.name), eventCollector)
+    var isChanged = false
+    var isSuccess = true
+
 
     // request uptodate dependencies :
     val classpath = allCompilerService match {
       case None => cfg.classpath
       case Some(acs) => cfg.classpath.map { f =>
-        acs.findByExported(f) match {
-          case Some(prj) =>  back = back ::: prj.compile(runId, checkDeps); prj.cfg.targetDir
-          case None => acs.findByTargetDir(f) match {
-            case Some(prj) =>  back = back ::: prj.compile(runId, checkDeps); prj.cfg.targetDir
-            case None => (f.lastModified() > _lastCompileFeedback.runId) match {
-              case true => back = new CompileFeedback(runId, "file " + f +" updated since last compile", true, true) :: back; f
-              case false => f
+        val oPrj = acs.findByExported(f) orElse acs.findByTargetDir(f)
+        oPrj match {
+          case Some(prj) => {
+            back = prj.compile(runId, checkDeps, back)
+            val fb = back.head
+            if (!fb.isSuccess) {
+              eventLogger.error("can't recompil due to failure in compilation of " + fb.projectName)
+              isSuccess = false
+            } else {
+              isChanged = isChanged || fb.isChanged
             }
+            // use targetDir in classpath
+            prj.cfg.targetDir
+          }
+          case None => (f.lastModified() > _lastCompileFeedback.runId) match {
+            case true => {
+              eventLogger.info("dependency file modified : " + f.getCanonicalPath)
+              isChanged = true
+              f
+            }
+            case false => f
           }
         }
       }
     }
+    if (!isSuccess) {
+      _lastCompileFeedback = new CompileFeedback(runId, cfg.name, eventCollector, isChanged, isSuccess)
+      return _lastCompileFeedback :: back
+    }
+
 
     if (!cfg.targetDir.exists()) {
       cfg.targetDir.mkdirs();
     }
 
+    // to be compatible with maven
     val lastCompileAtFile = new File(cfg.targetDir + ".timestamp");
     val lastCompileAt : Long = if (lastCompileAtFile.exists() && (cfg.targetDir.list().length > 0)) {
       lastCompileAtFile.lastModified()
@@ -208,29 +245,20 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
     }
 
     val now = System.currentTimeMillis()
-    val classpathIsChanged = back.foldLeft(false)((r,i) => r || i.isChanged)
+    val classpathIsChanged = isChanged //back.foldLeft(false)((r,i) => r || i.isChanged)
     val files = classpathIsChanged match {
       case false => findFilesToCompile(lastCompileAt)
-      case true => reset() ; findFilesToCompile(java.lang.Long.MIN_VALUE)
+      case true => reset(eventLogger) ; findFilesToCompile(java.lang.Long.MIN_VALUE)
     }
 
     if (files.isEmpty) {
-      return new CompileFeedback(
-        runId,
-        "Nothing to compile - all classes are up to date",
-        false,
-        true
-      ) :: back
+      eventLogger.info("Nothing to compile - all classes are up to date")
+      _lastCompileFeedback = new CompileFeedback(runId, cfg.name, eventCollector, isChanged, isSuccess)
+      return _lastCompileFeedback :: back
     }
+    
 //....
-    val outStr = new StringWriter()
-    val out = new PrintWriter(outStr)
-
     try {
-      def error(msg: String) {
-        out.println(/*new Position*/ FakePos("hsc"), msg + "\n  hsc -help  gives more information")
-      }
-
       val args = cfg.additionalArgs :::
         List(
           "-d", cfg.targetDir.getAbsolutePath,
@@ -239,17 +267,14 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
         cfg.sourceDirs.flatMap(f => List("-sourcepath", f.getAbsolutePath)) :::
         files.map(_.getAbsolutePath)
 
-      out.println("Compiling " + files.length + " source files to " + cfg.targetDir)
+      eventLogger.info("Compiling " + files.length + " source files to " + cfg.targetDir)
 
-      val command = new OfflineCompilerCommand(args, new Settings(error), error, false)
-      val reporter = new CompilerReporter(command.settings, out) {
-        // disable prompts, so that compile server cannot block
-        override def displayPrompt = ()
-      }
+      val command = new OfflineCompilerCommand(args, new Settings(eventLogger.error), eventLogger.error, false)
+      val reporter = new CompilerLoggerAdapter(command.settings, eventLogger)
       lazy val newGlobal = new Global(command.settings, reporter) {
-        override def inform(msg: String) = out.println(msg)
+        override def inform(msg: String) = eventLogger.info(msg)
       }
-
+      //TODO update code to avoid usage of reporter
       if (command.shouldStopWithInfo) {
         reporter.info(null, command.getInfoMessage(newGlobal), true)
       } else if (command.files.isEmpty) {
@@ -261,7 +286,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
             _compiler.settings = command.settings
             _compiler.reporter = reporter
           } else {
-            out.println("[Starting new compile server instance]")
+            eventLogger.info("Starting new compile server instance")
             _compiler = newGlobal
           }
           val c = _compiler
@@ -270,34 +295,37 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
 
 
           //TODO if there is error compilation don't update time stamp to recompile file after (may be need a fix in an other file)
-          if (!lastCompileAtFile.exists()) {
-            new java.io.FileOutputStream(lastCompileAtFile).close()
+          if (isSuccess) {
+            if (!lastCompileAtFile.exists()) {
+              new java.io.FileOutputStream(lastCompileAtFile).close()
+            }
+            lastCompileAtFile.setLastModified(now)
           }
-          lastCompileAtFile.setLastModified(now)
         } catch {
           case ex => {
-            if (command.settings.debug.value) {
-              ex.printStackTrace(out)
-            }
-            reporter.error(null, "fatal error: " + ex.getMessage)
-            out.println(reset())
+//            if (command.settings.debug.value) {
+//              ex.printStackTrace(out)
+//            }
+            eventLogger.error("fatal error: " + ex.getMessage)
+            reset(eventLogger)
           }
         }
       }
-      reporter.printSummary()
+//      reporter.printSummary()
       runtime.gc()
       if ((runtime.totalMemory() - runtime.freeMemory()).toDouble / runtime.maxMemory().toDouble > MaxCharge) {
-        out.println("memory load > " + MaxCharge)
-        out.println(reset())
+        eventLogger.info("memory load > " + MaxCharge)
+        reset(eventLogger)
       }
     } catch {
-      case t => t.printStackTrace(out)
-    } finally {
-      out.close()
-      in.close()
+      case t => {
+        isSuccess = false
+        t.printStackTrace()
+        eventLogger.error("exception : " + t.getClass + " : " + t.getMessage)
+      }
     }
-    back.close()
-    back.toString()
+    _lastCompileFeedback = new CompileFeedback(runId, cfg.name, eventCollector, isChanged, isSuccess)
+    _lastCompileFeedback :: back
   }
 
   private
@@ -309,45 +337,3 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
     }
   }
 }
-
-abstract class Projects {
-
-  /**
-   * Update the definition of existing project with the same name
-   * Update projects dependency graph
-   */
-  def add(v : ProjectRawInfo)
-
-  /**
-   * visit the list of project sorted by dependency
-   */
-  def visit(f : ProjectRawInfo => Unit)
-}
-
-case class VFile(f : File, link : Option[File])
-class VFileList extends immutable.List[VFile] {
-  def realPath : List[File] = map{ vf =>
-    vf.link.filter(_.exists).getOrElse(vf.f)
-  }
-
-  def realPathStr = realPath.map(f.getCanonicalPath).mkString(File.separatorPath)
-
-  def update(vf : VFile) = {
-    (head.f == vf.f) match {
-      case true => vf :: tail
-      case false => head :: update(tail)
-    }
-  }
-}
-
-trait TypeInfo {
-  def src : File
-  def dotclass : File
-  def directDep : Set[TypeName]
-}
-
-class SrcDependencyTools {
-  def srcToClass(src : File)
-  def classToClassFile
-}
-
