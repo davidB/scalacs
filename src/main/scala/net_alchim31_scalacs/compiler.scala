@@ -128,14 +128,16 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
     }
 
     def findFilesToCompile(rootDir : File, rpath : String) : List[File] = {
-      val dir = new File(rootDir, rpath)
       var back : List[File] = Nil
-      for (child <- dir.listFiles(); if !child.isHidden && child.canRead) {
-        val rpathChild = rpath + "/" + child.getName
-        if (child.isDirectory) {
-          back = findFilesToCompile(rootDir, rpathChild) ::: back
-        } else if (accept(child, rpathChild)) {
-          back = child :: back
+      val dir = new File(rootDir, rpath)
+      if (dir.isDirectory) {
+        for (child <- dir.listFiles(); if !child.isHidden && child.canRead) {
+          val rpathChild = rpath + "/" + child.getName
+          if (child.isDirectory) {
+            back = findFilesToCompile(rootDir, rpathChild) ::: back
+          } else if (accept(child, rpathChild)) {
+            back = child :: back
+          }
         }
       }
       back
@@ -267,7 +269,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
         cfg.sourceDirs.flatMap(f => List("-sourcepath", f.getAbsolutePath)) :::
         files.map(_.getAbsolutePath)
 
-      eventLogger.info("Compiling " + files.length + " source files to " + cfg.targetDir)
+      eventLogger.info("Compiling " + files.length + " source files from " + cfg.targetDir)
 
       val command = new OfflineCompilerCommand(args, new Settings(eventLogger.error), eventLogger.error, false)
       val reporter = new CompilerLoggerAdapter(command.settings, eventLogger)
@@ -306,7 +308,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
 //            if (command.settings.debug.value) {
 //              ex.printStackTrace(out)
 //            }
-            eventLogger.error("fatal error: " + ex.getMessage)
+            eventLogger.error("fatal error", ex)
             reset(eventLogger)
           }
         }
@@ -321,7 +323,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
       case t => {
         isSuccess = false
         t.printStackTrace()
-        eventLogger.error("exception : " + t.getClass + " : " + t.getMessage)
+        eventLogger.error("exception", t)
       }
     }
     _lastCompileFeedback = new CompileFeedback(runId, cfg.name, eventCollector, isChanged, isSuccess)

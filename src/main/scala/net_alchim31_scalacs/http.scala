@@ -108,22 +108,6 @@ class HttpPipelineFactory extends ChannelPipelineFactory {
 class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUpstreamHandler {
   import java.net.URI
   import scala._
-  val sampleConfig = new SingleConfig(
-    "sample",
-    List(new File("/home/dwayne/work/oss/scala-tools/scala-tools-server/src/main/scala")),
-    List(RegExpUtil.globToRegexPattern("*.scala")),
-    Nil,
-    new File("/home/dwayne/work/oss/scala-tools/scala-tools-server/target/classes"),
-    List(
-      new File("/home/dwayne/.m2/repository/org/scala-lang/scala-library/2.7.5/scala-library-2.7.5.jar"),
-      new File("/home/dwayne/.m2/repository/org/scala-lang/scala-compiler/2.7.5/scala-compiler-2.7.5.jar"),
-      new File("/home/dwayne/.m2/repository/org/jboss/netty/netty/3.1.0.GA/netty-3.1.0.GA.jar")
-    ),
-    List(
-      "-deprecation"
-    ),
-    None
-  )
 
   override
   def messageReceived(ctx : ChannelHandlerContext, e : MessageEvent) {
@@ -236,7 +220,7 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
         val yaml = new Yaml()
         var counter = 0
         val cfgAsYamlStr = request.getContent.toString("UTF-8")
-        println(cfgAsYamlStr)
+        //println(cfgAsYamlStr)
         val it = yaml.loadAll(cfgAsYamlStr).iterator
         while (it.hasNext) {
           val data = it.next().asInstanceOf[java.util.Map[String,_]]
