@@ -34,18 +34,19 @@ class CompilerLoggerAdapter(val settings: Settings, logger : Logger) extends Abs
           case _ => pos.source match {
             case None => None
             case Some(src) => {
-              val (linenum, columnBegin, columnEnd) = pos.line match {
+              val offset = pos.offset.getOrElse(0)
+              val (linenum, columnBegin, length) = pos.line match {
                 case None => (0, 0, 0)
                 case Some(l) => pos.column match {
                   case None => (l, 0, 0)
                   case Some(c0) => {
                     val content = pos.lineContent.stripLineEnd
-                    val end = List(' ', ';', '.', '"', '(', '{').map(content.indexOf(_)).filter(_ != -1).sort(_ < _).firstOption.getOrElse(c0+1)
-                    (l, c0, end)
+                    val length = List(' ', ';', '.', '"', '(', '{').map(content.indexOf(c0, _)).filter(_ != -1).sort(_ < _).firstOption.map(_ - c0).getOrElse(1)
+                    (l, c0, length)
                   }
                 }
               }
-              Some(SrcLocation(new File(src.file.path), linenum, columnBegin, columnEnd))
+              Some(SrcLocation(new File(src.file.path), linenum, columnBegin, offset, length))
             }
           }
         }

@@ -2,7 +2,7 @@ package net_alchim31_scalacs
 
 import java.io.File
 
-case class SrcLocation(file : File, linenum : Int, columnBegin : Int, columnEnd : Int)
+case class SrcLocation(file : File, linenum : Int, columnBegin : Int, offset : Int, length : Int)
 
 abstract sealed class LogLevel
 object LogLevel {
@@ -15,8 +15,12 @@ trait Logger {
   def category : List[CharSequence]
 
   def info(msg : CharSequence) = log(LogLevel.INFO, msg, None)
-  def warn(msg : CharSequence) = log(LogLevel.INFO, msg, None)
-  def error(msg : CharSequence) = log(LogLevel.INFO, msg, None)
+  def warn(msg : CharSequence) = log(LogLevel.WARN, msg, None)
+  def error(msg : CharSequence) = log(LogLevel.ERROR, msg, None)
+  def error(msg : CharSequence, t : Throwable) {
+    error(msg + " [" + t.getClass + " : " + t.getMessage + "]")
+    //t.printStackTrace()
+  }
 
   def log(level : LogLevel, msg : CharSequence, loc : Option[SrcLocation]) : Unit
   def newChild(subCategory : CharSequence) : Logger
@@ -50,7 +54,7 @@ class EventCollector(initial : List[Event]) {
         append(event.category.reverse.mkString(".")).
         append('\t')
       event.loc match {
-        case Some(loc) => str.append(loc.file).append('#').append(loc.linenum).append('(').append(loc.columnBegin).append(',').append(loc.columnEnd).append(')')
+        case Some(loc) => str.append(loc.file).append('#').append(loc.linenum).append(',').append(loc.columnBegin).append(',').append(loc.offset).append(',').append(loc.length)
         case None =>
       }
       str.append('\t').
