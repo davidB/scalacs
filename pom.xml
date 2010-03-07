@@ -95,7 +95,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.13-SNAPSHOT</version>
+        <version>2.13.1</version>
         <executions>
           <execution>
             <id>compile</id>
