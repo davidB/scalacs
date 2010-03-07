@@ -1,5 +1,6 @@
 ScalaCS
 =======
+ !! NOT YET RELEASED !!
 
 The firsts goals of ScalaCS are :
 * to provide a resident compiler server for several projects (into decrease time need to compile from command line tool
@@ -18,9 +19,9 @@ ScalaCS is short of scala-compiler-server (but I hope to support other tool in t
 Installation
 ------------
 
-copy the latest jar (scalacs-X.Y-withDeps) from scala-tools.org :
-* [release](http://scala-tools.org/repo-releases/org/scala-tools/scalacs)
-* [snapshot / wip](http://scala-tools.org/repo-snapshots/org/scala-tools/scalacs)
+copy the latest jar (scalacs-X.Y-withDeps) from oss.sonatype.org :
+* [release](http://oss.sonatype.org/github-releases/net/alchim31/scalacs)
+* [snapshot / wip](http://oss.sonatype.org/github-snapshots/net/alchim31/scalacs)
 
 Server startup
 --------------
@@ -32,6 +33,11 @@ Or use scalacs-0.1.jar + dependencies (listed into pom.xml) from a maven reposit
 HTTP Interface
 --------------
 
+Some basic client samples are provided
+* shell script : scalacs.sh (use [cUrl]() to do http request)
+* java class : src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
+
+But best is to call http directly from the editor/IDE you used. 
 h3. help, usage
 
 simply call http://127.0.0.1:27616/
@@ -53,6 +59,7 @@ Fields :
 * args : list of additional args to pass to the scalac compiler, could be ignored (depends of the backend)! (optional)
 
 Sample :
+<pre>
 <code>
   name : sample
   sourceDirs :
@@ -71,10 +78,11 @@ Sample :
     - "-deprecation"
 </code>
 
+</pre>
 
 h3. compile
 
-Request to compile modified project.
+Request to compile modified projects.
 HTTP GET to : http://127.0.0.1:27616/compile
 
 h3. cleanCompiler
@@ -93,4 +101,10 @@ TODO
 * do automatic cleanCompiler when dependency jar are modified
 * document output/log
 * integrate sts into maven-scala-plugin and YaScalaDT
-* add a plugin/extension engine (may be based on Guice, osgi)
+
+Thanks
+------
+
+to read me to end, and feedbacks are welcome !
+
+/davidB
