@@ -10,13 +10,13 @@ case $1 in
     ;;
   add)
     # shortcut (and for backward compatibility)
-    curl --data-binary @$2 ${URL}/createOrUpdate
+    curl --data-binary @$2 ${URL}/createOrUpdate | tr '§' '\n'
     ;;
   createOrUpdate)
-    curl --data-binary @$2 ${URL}/createOrUpdate
+    curl --data-binary @$2 ${URL}/createOrUpdate | tr '§' '\n'
     ;;
   *)
     # $1 support compile, clean, reset, delete
-    curl ${URL}/$1?p=$2
+    curl ${URL}/$1?p=$2 | tr '§' '\n'
     ;;
 esac

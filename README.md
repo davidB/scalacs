@@ -3,11 +3,11 @@ ScalaCS
  !! NOT YET RELEASED !!
 
 The firsts goals of ScalaCS are :
-* to provide a resident compiler server for several projects (into decrease time need to compile from command line tool
+* to provide a resident compiler server for several projects (=> decrease time need to re-compile from command line tool)
 * to ease integration into tools (text editor, IDE)
   * by using an http interface to access services provided by the server to ease integration, see sample clients
-    * sample shell script, used curl sts.sh (could be adapted easily to Windows, Emacs and any Text editor who allow running external tools)
-    * sample java client (to copy/paste, ro adapte) at src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
+    * sample shell script, used curl scalacs.sh (could be adapted easily to Windows, Emacs and any Text editor who allow running external tools)
+    * sample java client (to copy/paste/adapte) at src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
   * by providing formatted ouput log (and regexp to parse +/-)
 
 Why name it ScalaCS ?
@@ -34,10 +34,34 @@ HTTP Interface
 --------------
 
 Some basic client samples are provided
-* shell script : scalacs.sh (use [cUrl]() to do http request)
+* shell script : scalacs.sh (use [cUrl]() to do http request and tr to restore multiline message)
 * java class : src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
 
-But best is to call http directly from the editor/IDE you used. 
+But best is to call http directly from the editor/IDE you used.
+ 
+h3. output format
+
+The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
+<pre>
+<code>
+^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$
+</code>
+</pre>
+* group 1 : Level of the message
+* group 2 : category of the message
+* group 3 : source localisation iff not empty use the following regexp to parse :
+  <pre>
+  <code>
+([^#]*)#(\d+),(\d+),(\d+),(\d+)
+  </code>
+  </pre>
+  * group 3.1 : absolute path of the file
+  * group 3.2 : start line
+  * group 3.3 : start column
+  * group 3.4 : start charactere offset in the file (some editor/IDE prefer offset to line/column)
+  * group 3.5 : length in character
+* group 4 : the message with '\n' replaced by '§' (there is no '\r' into the message), so replace '§' by your line feef to have the message on several lines ('\t' are allowed).
+
 h3. help, usage
 
 simply call http://127.0.0.1:27616/
@@ -54,7 +78,7 @@ Fields :
 * includes : filter to select file to compile into sourceDirs(optional)
 * excludes : filter to select file to not compile into sourceDirs(optional)
 * targetDir : place where to put generated .class
-* classpath : list of path (directory/jar) need to compile files from sourceDirs
+* classpath : list of path (directory/jar) needed to compile files from sourceDirs
 * exported : the path of the jar/directory used by other project to reference the current project (optional)
 * args : list of additional args to pass to the scalac compiler, could be ignored (depends of the backend)! (optional)
 
@@ -77,7 +101,6 @@ Sample :
   args :
     - "-deprecation"
 </code>
-
 </pre>
 
 h3. compile
@@ -90,10 +113,16 @@ h3. cleanCompiler
 Request to clean compiler (cache).
 HTTP GET to : http://127.0.0.1:27616/cleanCompiler
 
+
+Notes
+-----
+
+Use 2 separated projects for 'main' and 'test' part, where test has got main into its classpath.
+
 TODO
 ----
 
-* deploy scalacs into central repository
+* --deploy scalacs into central repository--, not possible because scalacs depends of artifact from jboss (netty) and from scala-tools.org (scala-library, scala-compiler,...)
 * document output format
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
 * integrate xsbt launcher as bootstrap
