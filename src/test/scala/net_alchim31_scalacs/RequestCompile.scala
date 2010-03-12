@@ -5,6 +5,7 @@ class RequestCompileTest {
   import org.junit.{Before, Test}
   import java.net.URLClassLoader
   import java.io.File
+  import scala.collection.jcl.Conversions._
 
   def trace(str : String) = { /* println(str) */ }
   
@@ -65,10 +66,15 @@ args :
     Assert.assertTrue("one project added", createReturn.contains("created/updated/total : 1/0/1"))
     // request compile
     try {
+      import net_alchim31_scalacs_client.BasicHttpScalacsClient.Level
+      
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
-      Assert.assertTrue("has Error", compileReturn.contains("-ERROR\t"))
-      Assert.assertTrue("has good error message", compileReturn.contains("object scala not found"))
+      val r = _client.parse(compileReturn);
+      Assert.assertTrue("has some feedback lines", r.size > 0)
+      val errors = r.filter(_.level == Level.ERROR)
+      Assert.assertTrue("has Error", errors.size == 1)
+      Assert.assertTrue("has good error message", errors.first.text.toString.contains("object scala not found"))
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)

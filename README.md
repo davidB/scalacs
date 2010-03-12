@@ -21,10 +21,10 @@ ScalaCS is short of scala-compiler-server (but I hope to support other tool in t
 Installation
 ------------
 
-copy the latest jar (scalacs-X.Y-withDeps) from oss.sonatype.org :
+Copy the latest jar (scalacs-X.Y-withDeps) from :
 
-* [release](http://oss.sonatype.org/github-releases/net/alchim31/scalacs)
-* [snapshot / wip](http://oss.sonatype.org/github-snapshots/net/alchim31/scalacs)
+* (github)[http://github.com/davidB/scalacs/downloads]
+* (oss.sonatype.org)[http://oss.sonatype.org/content/groups/github/net/alchim31/scalacs].
 
 Server startup
 --------------
@@ -46,18 +46,20 @@ But best is to call http directly from the editor/IDE you used.
 ### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
-`^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
+> `^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
 
 * group 1 : Level of the message
 * group 2 : category of the message
 * group 3 : source localisation iff not empty use the following regexp to parse :
-  `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
+  > `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
   * group 3.1 : absolute path of the file
   * group 3.2 : start line
   * group 3.3 : start column
   * group 3.4 : start charactere offset in the file (some editor/IDE prefer offset to line/column)
   * group 3.5 : length in character
 * group 4 : the message with '\n' replaced by '§' (there is no '\r' into the message), so replace '§' by your line feef to have the message on several lines ('\t' are allowed).
+
+You could see the method parse of  <src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java> as sample.
 
 ### help, usage
 

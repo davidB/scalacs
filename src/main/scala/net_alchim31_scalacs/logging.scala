@@ -58,7 +58,7 @@ class EventCollector(initial : List[Event]) {
         case None =>
       }
       str.append('\t').
-        append(event.msg.toString.replace('\n', '§').replace('\r', '')).
+        append(event.msg.toString.replaceAll("\r\n|\n|\r", "§")).
         append('\n')
     }
     //TODO add  summary (nb error, nb warning)
