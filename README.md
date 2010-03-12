@@ -1,5 +1,6 @@
 ScalaCS
 =======
+
  !! NOT YET RELEASED !!
 
 The firsts goals of ScalaCS are :
@@ -20,6 +21,7 @@ Installation
 ------------
 
 copy the latest jar (scalacs-X.Y-withDeps) from oss.sonatype.org :
+
 * [release](http://oss.sonatype.org/github-releases/net/alchim31/scalacs)
 * [snapshot / wip](http://oss.sonatype.org/github-snapshots/net/alchim31/scalacs)
 
@@ -34,27 +36,21 @@ HTTP Interface
 --------------
 
 Some basic client samples are provided
+
 * shell script : scalacs.sh (use [cUrl]() to do http request and tr to restore multiline message)
 * java class : src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
 
 But best is to call http directly from the editor/IDE you used.
  
-h3. output format
+### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
-<pre>
-<code>
-^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$
-</code>
-</pre>
+  ^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$
+
 * group 1 : Level of the message
 * group 2 : category of the message
 * group 3 : source localisation iff not empty use the following regexp to parse :
-  <pre>
-  <code>
-([^#]*)#(\d+),(\d+),(\d+),(\d+)
-  </code>
-  </pre>
+    ([^#]*)#(\d+),(\d+),(\d+),(\d+)
   * group 3.1 : absolute path of the file
   * group 3.2 : start line
   * group 3.3 : start column
@@ -62,17 +58,18 @@ The output of command that return with HTTP status OK (200) should follow the fo
   * group 3.5 : length in character
 * group 4 : the message with '\n' replaced by '§' (there is no '\r' into the message), so replace '§' by your line feef to have the message on several lines ('\t' are allowed).
 
-h3. help, usage
+### help, usage
 
 simply call http://127.0.0.1:27616/
 
 Note : multi line message use the character *§* in place of *\n* so editor could grab the full message in on-line (regexp)
 
-h3. createOrUpdate
+### createOrUpdate
 
 Request to createOrUpdate one or more project define in the Yaml syntax, each project definition should be separated by "---"
 Project definition should by send as content of the HTTP POST to : http://127.0.0.1:27616/createOrUpdate
 Fields :
+
 * name : name of the project, used as a key
 * sourceDirs : list of directory with source files to compile
 * includes : filter to select file to compile into sourceDirs(optional)
@@ -83,8 +80,7 @@ Fields :
 * args : list of additional args to pass to the scalac compiler, could be ignored (depends of the backend)! (optional)
 
 Sample :
-<pre>
-<code>
+<pre><code>
   name : sample
   sourceDirs :
     - "/home/dwayne/work/oss/scalacs/src/main/scala"
@@ -100,18 +96,17 @@ Sample :
   exported : ""
   args :
     - "-deprecation"
-</code>
-</pre>
+</code></pre>
 
-h3. compile
+### compile
 
 Request to compile modified projects.
-HTTP GET to : http://127.0.0.1:27616/compile
+> HTTP GET to : http://127.0.0.1:27616/compile
 
-h3. cleanCompiler
+### cleanCompiler
 
 Request to clean compiler (cache).
-HTTP GET to : http://127.0.0.1:27616/cleanCompiler
+> HTTP GET to : http://127.0.0.1:27616/cleanCompiler
 
 
 Notes
