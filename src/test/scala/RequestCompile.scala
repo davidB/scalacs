@@ -1,5 +1,6 @@
 package net_alchim31_scalacs
 
+//TODO add test with the regexp to parse Compilation error (may be include the parser into BasicHttpScalacsClientj.sh
 class RequestCompileTest {
   import org.junit.{Before, Test}
   import java.net.URLClassLoader
