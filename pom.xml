@@ -16,6 +16,17 @@
     </license>
   </licenses>
 
+  <scm>
+    <connection>scm:git:git://github.com/davidB/${project.artifactId}.git</connection>
+    <developerConnection>scm:git:git@github.com:davidB/${project.artifactId}.git</developerConnection>
+    <url>http://github.com/davidB/${project.artifactId}/</url>
+  </scm>
+
+  <issueManagement>
+    <system>GitHub</system>
+    <url>http://github.com/davidB/yuicompressor-maven-plugin/issues</url>
+  </issueManagement>
+
   <properties>
     <scala.version>2.7.7</scala.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
