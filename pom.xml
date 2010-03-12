@@ -156,7 +156,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.13-SNAPSHOT</version>
+        <version>2.13.1</version>
         <configuration>
           <vscaladocVersion>${project.version}</vscaladocVersion>
         </configuration>
