@@ -4,6 +4,7 @@ ScalaCS
  !! NOT YET RELEASED !!
 
 The firsts goals of ScalaCS are :
+
 * to provide a resident compiler server for several projects (=> decrease time need to re-compile from command line tool)
 * to ease integration into tools (text editor, IDE)
   * by using an http interface to access services provided by the server to ease integration, see sample clients
@@ -37,7 +38,7 @@ HTTP Interface
 
 Some basic client samples are provided
 
-* shell script : scalacs.sh (use [cUrl]() to do http request and tr to restore multiline message)
+* shell script : scalacs.sh (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
 * java class : src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
 
 But best is to call http directly from the editor/IDE you used.
@@ -45,12 +46,12 @@ But best is to call http directly from the editor/IDE you used.
 ### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
-  ^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$
+`^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
 
 * group 1 : Level of the message
 * group 2 : category of the message
 * group 3 : source localisation iff not empty use the following regexp to parse :
-    ([^#]*)#(\d+),(\d+),(\d+),(\d+)
+  `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
   * group 3.1 : absolute path of the file
   * group 3.2 : start line
   * group 3.3 : start column
@@ -60,7 +61,7 @@ The output of command that return with HTTP status OK (200) should follow the fo
 
 ### help, usage
 
-simply call http://127.0.0.1:27616/
+> HTTP GET to : http://127.0.0.1:27616/
 
 Note : multi line message use the character *§* in place of *\n* so editor could grab the full message in on-line (regexp)
 
@@ -117,7 +118,7 @@ Use 2 separated projects for 'main' and 'test' part, where test has got main int
 TODO
 ----
 
-* --deploy scalacs into central repository--, not possible because scalacs depends of artifact from jboss (netty) and from scala-tools.org (scala-library, scala-compiler,...)
+* <strike>deploy scalacs into central repository</strike>, not possible because scalacs depends of artifact from jboss (netty) and from scala-tools.org (scala-library, scala-compiler,...)
 * document output format
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
 * integrate xsbt launcher as bootstrap
