@@ -1,8 +1,6 @@
 ScalaCS
 =======
 
- !! NOT YET RELEASED !!
-
 The firsts goals of ScalaCS are :
 
 * to provide a resident compiler server for several projects (=> decrease time need to re-compile from command line tool)
@@ -23,13 +21,13 @@ Installation
 
 Copy the latest jar (scalacs-X.Y-withDeps) from :
 
-* (github)[http://github.com/davidB/scalacs/downloads]
-* (oss.sonatype.org)[http://oss.sonatype.org/content/groups/github/net/alchim31/scalacs].
+* [github](http://github.com/davidB/scalacs/downloads)
+* [oss.sonatype.org](http://oss.sonatype.org/content/groups/github/net/alchim31/scalacs). (not yet available)
 
 Server startup
 --------------
 
->  java -jar target/scalacs-0.1-withDeps_sc2.7.7.jar
+>  java -jar scalacs-0.1-withDeps_sc2.7.7.jar
 
 Or use scalacs-0.1.jar + dependencies (listed into pom.xml) from a maven repository.
 
@@ -38,19 +36,20 @@ HTTP Interface
 
 Some basic client samples are provided
 
-* shell script : [scalacs.sh](tree/master/scalacs.sh) (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
-* java class : [BasicHttpScalacsClient.java](tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java)
+* shell script : [scalacs.sh](/davidB/scalacs/tree/master/scalacs.sh) (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
+* java class : [BasicHttpScalacsClient.java](/davidB/scalacs/tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java)
 
 But best is to call http directly from the editor/IDE you used.
  
 ### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
+
   `^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
 
 * group 1 : Level of the message
 * group 2 : category of the message
-* group 3 : source localisation iff not empty use the following regexp to parse :
+* group 3 : source localisation if not empty use the following regexp to parse :
   `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
   * group 3.1 : absolute path of the file
   * group 3.2 : start line
@@ -59,7 +58,7 @@ The output of command that return with HTTP status OK (200) should follow the fo
   * group 3.5 : length in character
 * group 4 : the message with '\n' replaced by '§' (there is no '\r' into the message), so replace '§' by your line feef to have the message on several lines ('\t' are allowed).
 
-You could see the method parse of [BasicHttpScalacsClient.java](tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java) as sample.
+You could see the method parse of [BasicHttpScalacsClient.java](/davidB/scalacs/tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java) as sample.
 
 ### help, usage
 
@@ -122,18 +121,16 @@ Use 2 separated projects for 'main' and 'test' part, where test has got main int
 TODO
 ----
 
-* <strike>deploy scalacs into central repository</strike>, not possible because scalacs depends of artifact from jboss (netty) and from scala-tools.org (scala-library, scala-compiler,...)
-* document output format
+* deploy scalacs into central repository (not possible until scalacs depends of artifact from jboss (netty))
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
 * integrate xsbt launcher as bootstrap
 * provide support/version for several scala's version
-* do automatic cleanCompiler when dependency jar are modified
-* document output/log
-* integrate sts into maven-scala-plugin and YaScalaDT
+* integrate scalacs into maven-scala-plugin and YaScalaDT
 
 Thanks
 ------
 
-to read me to end, and feedbacks are welcome !
+to read me to end,
+feedbacks are welcome !
 
 /davidB
