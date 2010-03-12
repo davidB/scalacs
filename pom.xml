@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.alchim31</groupId>
   <artifactId>scalacs</artifactId>
-  <version>0.1</version>
+  <version>0.2-SNAPSHOT</version>
   <name>ScalaCS</name>
   <description>experimental http server to run tools like compilation (target to replace fsc+fsc-server)</description>
   <inceptionYear>2010</inceptionYear>
