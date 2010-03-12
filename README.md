@@ -38,20 +38,20 @@ HTTP Interface
 
 Some basic client samples are provided
 
-* shell script : scalacs.sh (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
-* java class : src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
+* shell script : [scalacs.sh](tree/master/scalacs.sh) (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
+* java class : [BasicHttpScalacsClient.java](tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java)
 
 But best is to call http directly from the editor/IDE you used.
  
 ### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
-> `^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
+  `^-(INFO|WARN|ERROR)\t([^\t]*)\t([^\t]*)\t(.*)$`
 
 * group 1 : Level of the message
 * group 2 : category of the message
 * group 3 : source localisation iff not empty use the following regexp to parse :
-  > `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
+  `([^#]*)#(\d+),(\d+),(\d+),(\d+)`
   * group 3.1 : absolute path of the file
   * group 3.2 : start line
   * group 3.3 : start column
@@ -59,7 +59,7 @@ The output of command that return with HTTP status OK (200) should follow the fo
   * group 3.5 : length in character
 * group 4 : the message with '\n' replaced by '§' (there is no '\r' into the message), so replace '§' by your line feef to have the message on several lines ('\t' are allowed).
 
-You could see the method parse of  <src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java> as sample.
+You could see the method parse of [BasicHttpScalacsClient.java](tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java) as sample.
 
 ### help, usage
 
@@ -70,7 +70,9 @@ Note : multi line message use the character *§* in place of *\n* so editor coul
 ### createOrUpdate
 
 Request to createOrUpdate one or more project define in the Yaml syntax, each project definition should be separated by "---"
-Project definition should by send as content of the HTTP POST to : http://127.0.0.1:27616/createOrUpdate
+Project definition should by send as content of
+> HTTP POST to : http://127.0.0.1:27616/createOrUpdate
+
 Fields :
 
 * name : name of the project, used as a key
