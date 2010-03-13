@@ -40,7 +40,7 @@ Some basic client samples are provided
 * java class : [BasicHttpScalacsClient.java](/davidB/scalacs/tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java)
 
 But best is to call http directly from the editor/IDE you used.
- 
+
 ### output format
 
 The output of command that return with HTTP status OK (200) should follow the format readable with regexp :
@@ -121,7 +121,7 @@ Use 2 separated projects for 'main' and 'test' part, where test has got main int
 TODO
 ----
 
-* deploy scalacs into central repository (not possible until scalacs depends of artifact from jboss (netty))
+* deploy scalacs into central repository
 * integrate sbt, ConditionalCompilation (to avoid recompile all)
 * integrate xsbt launcher as bootstrap
 * provide support/version for several scala's version
