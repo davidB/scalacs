@@ -1,161 +1,57 @@
 package net_alchim31_scalacs
 
-import java.net.InetSocketAddress
-import org.yaml.snakeyaml.Yaml;
-import java.util.concurrent.Executors;
-
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.eclipse.jetty.server.handler.AbstractHandler
 
 /**
- * call eg : curl --url http://localhost:27616/add --data-binary @sample2.yaml;type=text/x-yaml
- *
- * @author The Netty Project (netty-dev@lists.jboss.org)
- * @author Trustin Lee (tlee@redhat.com)
- * @author david.bernard
- * @based on code from org.jboss.netty.example.http.file
+ * call eg : curl --url http://localhost:27616/createOrUpdate --data-binary @sample2.yaml;type=text/x-yaml
  */
-//TODO add start and stop method
 object HttpServer {
+  def main(args : Array[String], joining : Boolean) : Unit = {
+    import org.eclipse.jetty.server.Server
 
-    def main(args : Array[String]) {
-      // Configure the server.
-      val bootstrap = new ServerBootstrap(
-        new NioServerSocketChannelFactory(
-          Executors.newCachedThreadPool(),
-          Executors.newCachedThreadPool()
-        )
-      )
-      val port = 27616
+    val server = new Server(27616)
+    server.setHandler(new CompilerHandler())
 
-      // Set up the event pipeline factory.
-      bootstrap.setPipelineFactory(new HttpPipelineFactory())
-
-      // Bind and start to accept incoming connections.
-      println("start waiting request at "+ port) //TODO log
-      bootstrap.bind(new InetSocketAddress(port))
+    server.start()
+    if (joining) {
+      server.join()
     }
+  }
+
+  def main(args : Array[String]) : Unit = main(args, true)
 }
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.RandomAccessFile;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+class CompilerHandler extends AbstractHandler {
+  import org.eclipse.jetty.server.Request
+  import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
+  import java.io._
+  import org.eclipse.jetty.http.HttpStatus
 
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipelineCoverage;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
-import org.jboss.netty.handler.codec.frame.TooLongFrameException;
-import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
-import org.jboss.netty.handler.codec.http.HttpHeaders;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
-import org.jboss.netty.handler.codec.http.HttpResponseStatus;
-import org.jboss.netty.handler.codec.http.HttpVersion;
-import org.jboss.netty.handler.stream.ChunkedFile;
-
-import org.jboss.netty.channel.ChannelPipelineFactory;
-
-/**
- * @author The Netty Project (netty-dev@lists.jboss.org)
- * @author Trustin Lee (tlee@redhat.com)
- * @author david.bernard
- * @based on code from org.jboss.netty.example.http.file
- */
-class HttpPipelineFactory extends ChannelPipelineFactory {
-
-  import org.jboss.netty.channel.Channels
-  //import org.jboss.netty.handler.stream.ChunkedWriteHandler;
-  import org.jboss.netty.channel.ChannelPipeline;
-  import org.jboss.netty.handler.codec.http.HttpRequestDecoder;
-  import org.jboss.netty.handler.codec.http.HttpResponseEncoder;
   private
   val _compilerSrv = new CompilerService4Group()
 
-  def getPipeline() : ChannelPipeline = {
-    // Create a default pipeline implementation.
-    val pipeline = Channels.pipeline()
-
-    // Uncomment the following line if you want HTTPS
-    //SSLEngine engine = SecureChatSslContextFactory.getServerContext().createSSLEngine();
-    //engine.setUseClientMode(false);
-    //pipeline.addLast("ssl", new SslHandler(engine));
-
-    pipeline.addLast("decoder", new HttpRequestDecoder())
-    pipeline.addLast("encoder", new HttpResponseEncoder())
-    //pipeline.addLast("chunkedWriter", new ChunkedWriteHandler())
-
-    pipeline.addLast("handler", new HttpHandler(_compilerSrv))
-    pipeline
-  }
-}
-
-/**
- * @author The Netty Project (netty-dev@lists.jboss.org)
- * @author Trustin Lee (tlee@redhat.com)
- * @author david.bernard
- * @based on code from org.jboss.netty.example.http.file
- */
-@ChannelPipelineCoverage("all")
-class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUpstreamHandler {
-  import java.net.URI
-  import scala._
-
   override
-  def messageReceived(ctx : ChannelHandlerContext, e : MessageEvent) {
-
-    val request = e.getMessage().asInstanceOf[HttpRequest]
-    if ((request.getMethod() != HttpMethod.GET) && (request.getMethod() != HttpMethod.POST)) {
-      sendError(ctx, HttpResponseStatus.METHOD_NOT_ALLOWED, request.getMethod.toString())
-      return
+  def handle(target : String, baseRequest : Request, request : HttpServletRequest, response : HttpServletResponse)  {
+    response.setContentType("text/html;charset=utf-8")
+    try {
+      val beginAt = System.currentTimeMillis
+      val eventCollector = new EventCollector(Nil)
+      val customStatus = action(eventCollector, request)
+      new EventLogger(Nil, eventCollector).info("time to process :" + ((System.currentTimeMillis - beginAt).toFloat / 1000) + "s")
+      val txt = eventCollector.toCharSequence(true)
+      customStatus match {
+        case None => sendText(response, txt)
+        case Some(status) => sendError(response, status, txt)
+      }
+    } catch {
+      case t => sendError(response, HttpStatus.Code.INTERNAL_SERVER_ERROR, t)
     }
-    if (request.isChunked()) {
-      sendError(ctx, HttpResponseStatus.BAD_REQUEST, "chunck not supported")
-      return
-    }
-    val beginAt = System.currentTimeMillis
-    val eventCollector = new EventCollector(Nil)
-    val customStatus = action(eventCollector, request)
-    new EventLogger(Nil, eventCollector).info("time to process :" + ((System.currentTimeMillis - beginAt).toFloat / 1000) + "s")
-    val txt = eventCollector.toCharSequence(true)
-    customStatus match {
-      case None => sendText(ctx, txt)
-      case Some(status) => sendError(ctx, status, txt)
-    }
-  }
-
-  override
-  def exceptionCaught(ctx : ChannelHandlerContext, e : ExceptionEvent) {
-    val ch = e.getChannel()
-    val cause = e.getCause()
-    if (cause .isInstanceOf[TooLongFrameException]) {
-      sendError(ctx, HttpResponseStatus.BAD_REQUEST, cause);
-      return;
-    }
-
-    cause.printStackTrace() //TODO log
-    if (ch.isConnected()) {
-      sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR, cause);
-    }
+    baseRequest.setHandled(true)
   }
 
   //TODO add time need to process request
-  def action(eventCollector : EventCollector, request : HttpRequest) : Option[HttpResponseStatus] = {
-    import org.jboss.netty.handler.codec.http.QueryStringDecoder
-    import org.yaml.snakeyaml.{Yaml, Loader}
-    import org.yaml.snakeyaml.constructor.Constructor
-
-    val decoded = new QueryStringDecoder(request.getUri)
-
-    decoded.getPath.split('/').toList.filter(_.length != 0) match {
+  def action(eventCollector : EventCollector, request : HttpServletRequest) : Option[HttpStatus.Code] = {
+    request.getPathInfo.split('/').toList.filter(_.length != 0) match {
       case Nil => {
         new EventLogger(Nil, eventCollector).info("""usage :
           /ping : reply 'pong'
@@ -170,10 +66,10 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
         None
       }
       case actions :: _ => {
-        actions.split(Array(' ','+')).foldLeft(None : Option[HttpResponseStatus]){ (cumul, i) =>
+        actions.split(Array(' ','+')).foldLeft(None : Option[HttpStatus.Code]){ (cumul, i) =>
           cumul match {
             case Some(_) => cumul
-            case None => action(eventCollector, i, decoded.getParameters, request)
+            case None => action(eventCollector, i, request)
           }
         }
       }
@@ -181,13 +77,12 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
   }
 
   //TODO refactor to in/out eventCollector
-  def action(eventCollector : EventCollector, act : String, params : java.util.Map[String, java.util.List[String]], request : HttpRequest) : Option[HttpResponseStatus] = {
-    import scala.collection.jcl.Conversions._
+  def action(eventCollector : EventCollector, act : String, request : HttpServletRequest) : Option[HttpStatus.Code] = {
     import java.util.regex.Pattern
     def findProject() : Option[Pattern] = {
-      params.get("p") match {
+      request.getParameterValues("p") match {
         case null => None
-        case l : java.util.List[String]  if l.size == 1 && l.get(0) != null && !l.get(0).isEmpty => Some(Pattern.compile(l.get(0)))
+        case l : Array[String]  if l.length == 1 && l(0) != null && !l(0).isEmpty => Some(Pattern.compile(l(0)))
         case _ => None
       }
     }
@@ -195,8 +90,13 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
     val actLog = new EventLogger(List(act), eventCollector)
     act match {
       case "stop" => {
-        System.exit(0)//TODO make are clean smooth stop
         actLog.warn("stopping") //never reach
+        new Thread(){
+          override
+          def run() {
+            getServer.stop()
+          }
+        }.start()
         None
       }
       case "ping" => {
@@ -214,47 +114,53 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
       }
       case "createOrUpdate" /*if "text/x-yaml" == contentType*/ => {
         import scala.collection.jcl.Conversions._
+        import org.yaml.snakeyaml.Yaml
         val before = _compilerSrv.size
         // mime-type should be text/x-yaml (see http://stackoverflow.com/questions/332129/yaml-mime-type)
         var txt = ""
         val yaml = new Yaml()
         var counter = 0
-        val cfgAsYamlStr = request.getContent.toString("UTF-8")
-        //println(cfgAsYamlStr)
-        val it = yaml.loadAll(cfgAsYamlStr).iterator
-        while (it.hasNext) {
-          val data = it.next().asInstanceOf[java.util.Map[String,_]]
-          def toStr(k : String, orElse : String) : String = {
-            data.get(k) match {
-              case null => orElse
-              case v => v.toString
+        val iStream = request.getInputStream
+        try {
+          val it = yaml.loadAll(iStream).iterator
+          while (it.hasNext) {
+            val data = it.next().asInstanceOf[java.util.Map[String,_]]
+            def toStr(k : String, orElse : String) : String = {
+              data.get(k) match {
+                case null => orElse
+                case v => v.toString
+              }
             }
-          }
-          def toStrList(k : String) : List[String] = {
-            data.get(k) match {
-              case null => Nil
-              case v => v.asInstanceOf[java.util.List[String]].toList
+            def toStrList(k : String) : List[String] = {
+              data.get(k) match {
+                case null => Nil
+                case v => v.asInstanceOf[java.util.List[String]].toList
+              }
             }
-          }
-          def toFileOption(k : String) : Option[File] = {
-            data.get(k) match {
-              case null => None
-              case v => Some(new File(v.toString))
+            def toFileOption(k : String) : Option[File] = {
+              data.get(k) match {
+                case null => None
+                case v => Some(new File(v.toString))
+              }
             }
+            val cfg = new SingleConfig(
+              toStr("name", "xxx"),
+              toStrList("sourceDirs").map(new File(_)),
+              toStrList("includes").map(RegExpUtil.globToRegexPattern(_)),
+              toStrList("excludes").map(RegExpUtil.globToRegexPattern(_)),
+              new File(toStr("targetDir", "/tmp/target")),
+              toStrList("classpath").map(new File(_)),
+              toStrList("args"),
+              toFileOption("exported")
+            )
+            _compilerSrv.createOrUpdate(new CompilerService4Single(cfg, Some(_compilerSrv)))
+            actLog.info("createdOrUpdated " + data + " :: " + cfg)
+            counter += 1
           }
-          val cfg = new SingleConfig(
-            toStr("name", "xxx"),
-            toStrList("sourceDirs").map(new File(_)),
-            toStrList("includes").map(RegExpUtil.globToRegexPattern(_)),
-            toStrList("excludes").map(RegExpUtil.globToRegexPattern(_)),
-            new File(toStr("targetDir", "/tmp/target")),
-            toStrList("classpath").map(new File(_)),
-            toStrList("args"),
-            toFileOption("exported")
-          )
-          _compilerSrv.createOrUpdate(new CompilerService4Single(cfg, Some(_compilerSrv)))
-          actLog.info("createdOrUpdated " + data + " :: " + cfg)
-          counter += 1
+        } finally {
+          if (iStream != null) {
+            iStream.close()
+          }
         }
         val after = _compilerSrv.size
         actLog.info("nb compiler created/updated/total : " + (after - before) + "/" + (counter - (after - before)) + "/" + _compilerSrv.size)
@@ -296,36 +202,35 @@ class HttpHandler(_compilerSrv : CompilerService4Group) extends SimpleChannelUps
       case unknown => {
         actLog.warn("unsupported operation : " + unknown)
         println("unsupported operation : " + unknown) //TODO use serverLogger
-        Some(HttpResponseStatus.BAD_REQUEST)
+        Some(HttpStatus.Code.BAD_REQUEST)
       }
     }
   }
 
   private
-  def sendText(ctx : ChannelHandlerContext, txt : CharSequence) {
-    val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK)
-    response.setHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-8")
-    //response.setHeader(HttpHeaders.Names.CONTENT_LENGTH, txt.length)
-    response.setContent(ChannelBuffers.copiedBuffer(txt.toString() + "\r\n", "UTF-8"))
-    ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE)
+  def sendText(response : HttpServletResponse, txt : CharSequence) {
+    response.setContentType("text/plain; charset=UTF-8")
+    //response.setContentLength(txt.length)
+    response.getWriter().println(txt.toString())
+    response.setStatus(HttpStatus.OK_200)
   }
 
   private
-  def sendError(ctx : ChannelHandlerContext, status : HttpResponseStatus, exc : Throwable) {
+  def sendError(response : HttpServletResponse, status : HttpStatus.Code, exc : Throwable) {
+    exc.printStackTrace();
     val writer = new java.io.StringWriter()
     exc.printStackTrace(new java.io.PrintWriter(writer))
     writer.close()
-    sendError(ctx, status, writer.toString)
+    sendError(response, status, writer.toString)
   }
 
   private
-  def sendError(ctx : ChannelHandlerContext, status : HttpResponseStatus, txt : CharSequence) {
-    val response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, status)
-    response.setHeader(HttpHeaders.Names.CONTENT_TYPE, "text/plain; charset=UTF-8")
-    response.setContent(ChannelBuffers.copiedBuffer("Failure: " + status.toString() + "\n" + txt.toString, "UTF-8"));
-    // Close the connection as soon as the error message is sent.
-    ctx.getChannel().write(response).addListener(ChannelFutureListener.CLOSE)
+  def sendError(response : HttpServletResponse, status : HttpStatus.Code, txt : CharSequence) {
+    response.setContentType("text/plain; charset=UTF-8")
+    val writer = response.getWriter
+    writer.print("Failure: ")
+    writer.println(status)
+    writer.println(txt)
+    response.setStatus(status.getCode)
   }
 }
-
-

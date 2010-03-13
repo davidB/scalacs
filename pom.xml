@@ -48,14 +48,6 @@
     </repository>
   </repositories>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <dependencies>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -70,9 +62,9 @@
       <!--scope>provided</scope-->
     </dependency>
     <dependency>
-      <groupId>org.jboss.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>3.1.5.GA</version>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>7.0.2.RC0</version>
     </dependency>
     <dependency>
       <groupId>org.yaml</groupId>
@@ -81,9 +73,10 @@
     </dependency>
     <!-- Test -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.5</version>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>5.11</version>
+      <classifier>jdk15</classifier>
       <scope>test</scope>
     </dependency>
     <dependency>

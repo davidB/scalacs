@@ -2,9 +2,10 @@ package net_alchim31_scalacs
 
 //TODO add test with the regexp to parse Compilation error (may be include the parser into BasicHttpScalacsClientj.sh
 class RequestCompileTest {
-  import org.junit.{Before, Test}
   import java.net.URLClassLoader
   import java.io.File
+  import org.testng.Assert
+  import org.testng.annotations.{AfterClass, Test}
   import scala.collection.jcl.Conversions._
 
   def trace(str : String) = { /* println(str) */ }
@@ -15,7 +16,7 @@ class RequestCompileTest {
     new BasicHttpScalacsClient() {
       import java.net.URL
       def startNewServer() {
-        HttpServer.main(Array[String]())
+        HttpServer.main(Array[String](), false)
       }
       override
       def traceUrl(url : URL) {
@@ -42,8 +43,6 @@ class RequestCompileTest {
 
   @Test
   def compileHelloOkWithoutScalaLibShouldFailed() {
-    import java.io.File
-    import org.junit.Assert
     val sampleName = "prj-hello-ok" //-WithoutScalaLibShouldFailed"
 
     // register project
@@ -63,7 +62,7 @@ args :
       new File(_samplesClassesRootDir, sampleName).getCanonicalPath
     ));
     trace(createReturn)
-    Assert.assertTrue("one project added", createReturn.contains("created/updated/total : 1/0/1"))
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "one project added")
     // request compile
     try {
       import net_alchim31_scalacs_client.BasicHttpScalacsClient.Level
@@ -71,22 +70,19 @@ args :
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
       val r = _client.parse(compileReturn);
-      Assert.assertTrue("has some feedback lines", r.size > 0)
+      Assert.assertTrue(r.size > 0, "has some feedback lines")
       val errors = r.filter(_.level == Level.ERROR)
-      Assert.assertTrue("has Error", errors.size == 1)
-      Assert.assertTrue("has good error message", errors.first.text.toString.contains("object scala not found"))
+      Assert.assertTrue(errors.size == 1, "one project added")
+      Assert.assertTrue(errors.first.text.toString.contains("object scala not found"), "has some feedback lines")
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)
-      Assert.assertTrue("every project removed", removeReturn.contains("removed/total : 1/0"))
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
     }
   }
 
   @Test
   def compileHelloOk() {
-    import java.io.File
-    import org.junit.Assert
-    import java.net.URLClassLoader
     val sampleName = "prj-hello-ok"
     // register project
     val createReturn = _client.sendRequestCreateOrUpdate(String.format("""
@@ -108,23 +104,21 @@ args :
       _scalaLibPath
     ));
     trace(createReturn)
-    Assert.assertTrue("one project added", createReturn.contains("created/updated/total : 1/0/1"))
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "has some feedback lines")
     try {
       // request compile
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
-      Assert.assertTrue("has no Error", !compileReturn.contains("-ERROR\t"))
+      Assert.assertFalse(compileReturn.contains("-ERROR\t"), "has some feedback lines")
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)
-      Assert.assertTrue("every project removed", removeReturn.contains("removed/total : 1/0"))
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
     }
   }
 
   @Test
   def compileHelloFailedCompile() {
-    import java.io.File
-    import org.junit.Assert
     val sampleName = "prj-hello-failed-compile" //-WithoutScalaLibShouldFailed"
     // register project
     val createReturn = _client.sendRequestCreateOrUpdate(String.format("""
@@ -145,18 +139,23 @@ args :
       _scalaLibPath
     ));
     trace(createReturn)
-    Assert.assertTrue("one project added", createReturn.contains("created/updated/total : 1/0/1"))
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "has some feedback lines")
     // request compile
     try {
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
-      Assert.assertTrue("has Error", compileReturn.contains("-ERROR\t"))
-      Assert.assertTrue("has good error message", compileReturn.contains("')' expected but '}' found"))
+      Assert.assertTrue(compileReturn.contains("-ERROR\t"), "has some feedback lines")
+      Assert.assertTrue(compileReturn.contains("')' expected but '}' found"), "has some feedback lines")
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)
-      Assert.assertTrue("every project removed", removeReturn.contains("removed/total : 1/0"))
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
     }
   }
 
+  //@AfterClass(alwaysRun = true )
+  @AfterClass
+  def stopServer() {
+    //_client.sendRequestStop()
+  }
 }
