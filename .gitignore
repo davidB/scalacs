@@ -4,6 +4,8 @@
 dist
 target
 build.log
+release.properties
+pom.xml.*
 
 # ignore eclipse
 .settings
@@ -24,6 +26,7 @@ project/plugins/src_managed
 # ignore IDEA
 .idea
 *.iml
+
 
 # ignore ctags/etags
 TAGS
