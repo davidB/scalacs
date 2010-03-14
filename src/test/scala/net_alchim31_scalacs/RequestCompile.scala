@@ -9,7 +9,7 @@ class RequestCompileTest {
   import scala.collection.jcl.Conversions._
 
   def trace(str : String) = { /* println(str) */ }
-  
+
   private lazy
   val _client = {
     import net_alchim31_scalacs_client.BasicHttpScalacsClient
@@ -44,7 +44,7 @@ class RequestCompileTest {
   @Test
   def compileHelloOkWithoutScalaLibShouldFailed() {
     val sampleName = "prj-hello-ok" //-WithoutScalaLibShouldFailed"
-
+    val prjName = sampleName + "WithoutScalaLibShouldFailed"
     // register project
     val createReturn = _client.sendRequestCreateOrUpdate(String.format("""
 name : %s
@@ -57,27 +57,29 @@ targetDir : "%s"
 classpath :
 args :
     """,
-      sampleName,
+      prjName,
       new File(_samplesSrcRootDir, sampleName).getCanonicalPath,
       new File(_samplesClassesRootDir, sampleName).getCanonicalPath
     ));
     trace(createReturn)
-    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "one project added")
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/"), "one project added")
     // request compile
     try {
       import net_alchim31_scalacs_client.BasicHttpScalacsClient.Level
-      
+
+      touchFilesInDir(new File(_samplesSrcRootDir, sampleName), System.currentTimeMillis)
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
       val r = _client.parse(compileReturn);
       Assert.assertTrue(r.size > 0, "has some feedback lines")
       val errors = r.filter(_.level == Level.ERROR)
-      Assert.assertTrue(errors.size == 1, "one project added")
+      r.foreach{i => trace(i.toString)}
+      Assert.assertEquals(errors.size, 1, "has one error line")
       Assert.assertTrue(errors.first.text.toString.contains("object scala not found"), "has some feedback lines")
     } finally {
-      val removeReturn = _client.sendRequestRemove(sampleName);
+      val removeReturn = _client.sendRequestRemove(prjName);
       trace(removeReturn)
-      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has 1 project removed")
     }
   }
 
@@ -104,8 +106,9 @@ args :
       _scalaLibPath
     ));
     trace(createReturn)
-    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "has some feedback lines")
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/"), "one project added")
     try {
+      touchFilesInDir(new File(_samplesSrcRootDir, sampleName), System.currentTimeMillis)
       // request compile
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
@@ -113,7 +116,7 @@ args :
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)
-      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has 1 project removed")
     }
   }
 
@@ -139,9 +142,10 @@ args :
       _scalaLibPath
     ));
     trace(createReturn)
-    Assert.assertTrue(createReturn.contains("created/updated/total : 1/0/1"), "has some feedback lines")
+    Assert.assertTrue(createReturn.contains("created/updated/total : 1/"), "one project added")
     // request compile
     try {
+      touchFilesInDir(new File(_samplesSrcRootDir, sampleName), System.currentTimeMillis)
       val compileReturn = _client.sendRequestCompile()
       trace(compileReturn)
       Assert.assertTrue(compileReturn.contains("-ERROR\t"), "has some feedback lines")
@@ -149,7 +153,17 @@ args :
     } finally {
       val removeReturn = _client.sendRequestRemove(sampleName);
       trace(removeReturn)
-      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has some feedback lines")
+      Assert.assertTrue(removeReturn.contains("removed/total : 1/0"), "has 1 project removed")
+    }
+  }
+
+  private
+  def touchFilesInDir(dir : File, timestamp : Long) {
+    dir.listFiles().foreach { f =>
+      f.isDirectory match {
+        case false => f.setLastModified(timestamp)
+        case true => touchFilesInDir(f, timestamp)
+      }
     }
   }
 
