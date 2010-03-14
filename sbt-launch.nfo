@@ -1,0 +1,39 @@
+[scala]
+  version: 2.7.7
+# classifiers: sources
+
+[app]
+  org: net.alchim31
+  name: scalacs
+  version: 0.2-SNAPSHOT
+  class: net_alchim31_scalacs.HttpServer
+  components: xsbti
+  cross-versioned: false
+
+[repositories]
+  local
+  maven-local
+  sonatype-github: http://databinder.net/repo/, [organization]/[module]/[revision]/[type]s/[artifact](-[classifier]).[ext]
+  maven-central
+  scala-tools-releases
+  scala-tools-snapshots
+
+[boot]
+ directory: /tmp/scalacs.dir
+# properties: project/build.properties
+# prompt-create: Project does not exist, create new project?
+# prompt-fill: true
+# quick-option: true
+
+[log]
+ level: info
+
+[app-properties]
+ project.name: quick=set(test), new=prompt(Name), fill=prompt(Name)
+ project.organization: new=prompt(Organization)
+ project.version: quick=set(1.0), new=prompt(Version)[1.0], fill=prompt(Version)[1.0]
+ def.scala.version: quick=set(2.7.7), new=set(2.7.7), fill=set(2.7.7)
+ build.scala.versions: quick=set(2.7.7), new=prompt(Scala version)[2.7.7], fill=prompt(Scala version)[2.7.7]
+ sbt.version: quick=set(0.7.1), new=prompt(sbt version)[0.7.1], fill=prompt(sbt version)[0.7.1]
+ project.scratch: quick=set(true)
+ project.initialize: quick=set(true), new=set(true)

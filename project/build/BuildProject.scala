@@ -2,25 +2,19 @@ import sbt._
 
 class BuildProject(info: ProjectInfo) extends DefaultProject(info)
 {
-/*
-  override val dependencies = List(
-	"org.jboss.netty" % "netty" % "3.1.0.GA" % "compile->default",
-   	"org.scala-lang" % "scala-compiler" % "2.7.7",
-	"junit" % "junit" % "4.5" % "test->default",
-	"SnakeYAML" % "SnakeYAML" % "1.3"
+
+  override
+  def libraryDependencies = Set(
+    "org.eclipse.jetty" % "jetty-server" % "7.0.2.RC0",
+    "org.yaml" % "snakeyaml" % "1.4",
+    "org.scala-lang" % "scala-compiler" % "2.7.7",
+
+    "org.testng" % "testng" % "5.11" % "test->default" classifier "jdk15",
+    "commons-io" % "commons-io" % "1.3.2" % "test->default",
+    "commons-lang" % "commons-lang" % "2.4" % "test->default",
+
+    "org.scala-tools.sbt" % "launcher-interface" % "0.7.1" % "provided"
   )
-*/
-
-  val netty = "org.jboss.netty" % "netty" % "3.1.5.GA"
-  val snakeyaml = "org.yaml" % "snakeyaml" % "1.4"
-  val scala_compiler = "org.scala-lang" % "scala-compiler" % "2.7.7"
-
-  val junit = "junit" % "junit" % "4.5" % "test->default"
-  val commons_io = "commons-io" % "commons-io" % "1.3.2" % "test->default"
-  val commons_lang = "commons-lang" % "commons-lang" % "2.4" % "test->default"
-
-  // required because Ivy doesn't pull repositories from poms
-  val jbossRepo = "m2-repository-jboss" at "http://repository.jboss.org/maven2"
 
   lazy val hi = task { println(dependencies); None }
 

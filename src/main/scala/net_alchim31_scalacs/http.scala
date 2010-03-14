@@ -20,7 +20,33 @@ object HttpServer {
 
   def main(args : Array[String]) : Unit = main(args, true)
 }
+/*
+class HttpServer extends xsbti.AppMain {
+  def run(configuration: xsbti.AppConfiguration) = {
+            // get the version of Scala used to launch the application
+            val scalaVersion = configuration.provider.scalaProvider.version
+            // Print a message and the arguments to the application
+            println("Hello world!  Running Scala " + scalaVersion)
+            configuration.arguments.foreach(println)
+            // demonstrate the ability to reboot the application into different versions of Scala
+            // and how to return the code to exit with
+            scalaVersion match
+            {
+                    case "2.7.7" =>
+                            new xsbti.Reboot {
+                                    def arguments = configuration.arguments
+                                    def baseDirectory = configuration.baseDirectory
+                                    def scalaVersion = "2.7.4"
+                                    def app = configuration.provider.id
+                            }
+                    case "2.7.4" => new Exit(1)
+                    case _ => new Exit(0)
+            }
+    }
 
+    class Exit(val code : Int) extends xsbti.Exit
+}
+*/
 class CompilerHandler extends AbstractHandler {
   import org.eclipse.jetty.server.Request
   import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
@@ -125,10 +151,19 @@ class CompilerHandler extends AbstractHandler {
           val it = yaml.loadAll(iStream).iterator
           while (it.hasNext) {
             val data = it.next().asInstanceOf[java.util.Map[String,_]]
-            def toStr(k : String, orElse : String) : String = {
-              data.get(k) match {
-                case null => orElse
-                case v => v.toString
+            def toStr(k : String, orElse : String, raiseWarn : Boolean) : String = {
+              data match {
+                case null => {
+                  if (raiseWarn) actLog.warn("use default value for field '"+k +"' : " + orElse)
+                  orElse
+                }
+                case m => m.get(k) match {
+                  case null => {
+                    if (raiseWarn) actLog.warn("use default value for field '"+k +"' : " + orElse)
+                    orElse
+                  }
+                  case v => v.toString
+                }
               }
             }
             def toStrList(k : String) : List[String] = {
@@ -144,18 +179,23 @@ class CompilerHandler extends AbstractHandler {
               }
             }
             val cfg = new SingleConfig(
-              toStr("name", "xxx"),
+              toStr("name", "xxx", true),
               toStrList("sourceDirs").map(new File(_)),
               toStrList("includes").map(RegExpUtil.globToRegexPattern(_)),
               toStrList("excludes").map(RegExpUtil.globToRegexPattern(_)),
-              new File(toStr("targetDir", "/tmp/target")),
+              new File(toStr("targetDir", "/tmp/target", true)),
               toStrList("classpath").map(new File(_)),
               toStrList("args"),
               toFileOption("exported")
             )
-            _compilerSrv.createOrUpdate(new CompilerService4Single(cfg, Some(_compilerSrv)))
-            actLog.info("createdOrUpdated " + data + " :: " + cfg)
-            counter += 1
+            // TODO warn about some defaulting (name and targetDir)
+            if (cfg.sourceDirs.isEmpty) {
+              actLog.error("field 'sourceDirs' is required")
+            } else {
+              _compilerSrv.createOrUpdate(new CompilerService4Single(cfg, Some(_compilerSrv)))
+              actLog.info("createdOrUpdated " + data + " :: " + cfg)
+              counter += 1
+            }
           }
         } finally {
           if (iStream != null) {
