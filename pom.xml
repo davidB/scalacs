@@ -31,6 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
+    <mainClass>net_alchim31_scalacs.HttpServer</mainClass>
   </properties>
 
   <repositories>
@@ -100,7 +101,7 @@
       <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
-        <version>2.13.1</version>
+        <version>2.13.2-SNAPSHOT</version>
         <executions>
           <execution>
             <id>compile</id>
@@ -110,6 +111,19 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>false</addClasspath>
+              <mainClass>${mainClass}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -126,7 +140,7 @@
               <shadedClassifierName>withDeps_sc${scala.version}</shadedClassifierName>
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>net_alchim31_scalacs.HttpServer</mainClass>
+                  <mainClass>${mainClass}</mainClass>
                 </transformer>
               </transformers>
             </configuration>
