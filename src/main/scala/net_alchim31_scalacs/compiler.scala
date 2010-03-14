@@ -121,20 +121,19 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
   def findFilesToCompile(lastCompileTime : Long) : List[File] = {
     def accept(file : File, rpath : String) : Boolean = {
       //TODO also recompile dependens file (try to use code from SBT)
-      ( true //file.lastModified() >= lastCompileTime
-        && cfg.sourceExcludes.forall(pattern => !pattern.matcher(rpath).matches())
+      ( cfg.sourceExcludes.forall(pattern => !pattern.matcher(rpath).matches())
         && cfg.sourceIncludes.forall(pattern => pattern.matcher(rpath).matches())
       )
     }
 
-    def findFilesToCompile(rootDir : File, rpath : String) : List[File] = {
+    def findCompilables(rootDir : File, rpath : String) : List[File] = {
       var back : List[File] = Nil
       val dir = new File(rootDir, rpath)
       if (dir.isDirectory) {
         for (child <- dir.listFiles(); if !child.isHidden && child.canRead) {
           val rpathChild = rpath + "/" + child.getName
           if (child.isDirectory) {
-            back = findFilesToCompile(rootDir, rpathChild) ::: back
+            back = findCompilables(rootDir, rpathChild) ::: back
           } else if (accept(child, rpathChild)) {
             back = child :: back
           }
@@ -143,7 +142,11 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
       back
     }
 
-    cfg.sourceDirs.flatMap(s => findFilesToCompile(s, ""))
+    val compilables = cfg.sourceDirs.flatMap(s => findCompilables(s, ""))
+    compilables.exists(_.lastModified() >= lastCompileTime) match {
+      case true => compilables
+      case false => Nil
+    }
   }
 
   def reset(log : Logger) = {
@@ -200,11 +203,13 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
 
 
     // request uptodate dependencies :
+    //TODO avoid cycle
     val classpath = allCompilerService match {
       case None => cfg.classpath
       case Some(acs) => cfg.classpath.map { f =>
         val oPrj = acs.findByExported(f) orElse acs.findByTargetDir(f)
         oPrj match {
+          case Some(prj) if (prj == this) => f
           case Some(prj) => {
             back = prj.compile(runId, checkDeps, back)
             val fb = back.head
@@ -258,7 +263,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
       _lastCompileFeedback = new CompileFeedback(runId, cfg.name, eventCollector, isChanged, isSuccess)
       return _lastCompileFeedback :: back
     }
-    
+
 //....
     try {
       val args = cfg.additionalArgs :::
