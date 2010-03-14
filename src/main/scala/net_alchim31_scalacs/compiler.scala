@@ -144,7 +144,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
 
     val compilables = cfg.sourceDirs.flatMap(s => findCompilables(s, ""))
     compilables.exists(_.lastModified() >= lastCompileTime) match {
-      case true => compilables
+      case true => compilables.sort(_.getAbsolutePath < _.getAbsolutePath) //sort files to have a reproductible build across host
       case false => Nil
     }
   }
