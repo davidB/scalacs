@@ -1,14 +1,12 @@
 ScalaCS
 =======
 
-The firsts goals of ScalaCS are :
+The main goals of ScalaCS are :
 
 * to provide a resident compiler server for several projects (=> decrease time need to re-compile from command line tool)
 * to ease integration into tools (text editor, IDE)
-  * by using an http interface to access services provided by the server to ease integration, see sample clients
-    * sample shell script, used curl scalacs.sh (could be adapted easily to Windows, Emacs and any Text editor who allow running external tools)
-    * sample java client (to copy/paste/adapte) at src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java
-  * by providing formatted ouput log (and regexp to parse +/-)
+  * by using an http interface to access services provided by the server (ease integration, see sample clients (sh and java))
+  * by providing formatted ouput log (2 regexp to parse)
 
 Why name it ScalaCS ?
 ScalaCS is short of scala-compiler-server (but I hope to support other tool in the future (an not only compiler) like code analyzer,...)
