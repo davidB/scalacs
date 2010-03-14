@@ -120,10 +120,12 @@ TODO
 ----
 
 * deploy scalacs into central repository
-* integrate sbt, ConditionalCompilation (to avoid recompile all)
-* integrate xsbt launcher as bootstrap
+* integrate sbt, ConditionalCompilation (to avoid recompile all) (need to have sbt into Central repository with correct pom.xml)
+* integrate xsbt launcher as bootstrap (need to have xsbti launcher-interface into Central repository with correct pom.xml)
 * provide support/version for several scala's version
-* integrate scalacs into maven-scala-plugin and YaScalaDT
+* integrate scalacs with maven-scala-plugin
+* integrate scalacs with YaScalaDT
+* streaming ouput, instead of waiting the end of computation
 
 Thanks
 ------
