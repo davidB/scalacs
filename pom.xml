@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.5</maven.compiler.source>
     <maven.compiler.target>1.5</maven.compiler.target>
-    <mainClass>net_alchim31_scalacs.HttpServer</mainClass>
+    <mainClass>net_alchim31_scalacs.Main</mainClass>
   </properties>
 
   <repositories>
@@ -39,13 +39,6 @@
       <id>scala-tools.org</id>
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-    <repository>
-      <id>repository.jboss.org</id>
-      <url>http://repository.jboss.org/maven2</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
     </repository>
   </repositories>
 
@@ -71,6 +64,12 @@
       <groupId>org.yaml</groupId>
       <artifactId>snakeyaml</artifactId>
       <version>1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.sbt</groupId>
+      <artifactId>sbt-launch</artifactId>
+      <version>0.7.2</version>
+      <scope>provided</scope>
     </dependency>
     <!-- Test -->
     <dependency>
