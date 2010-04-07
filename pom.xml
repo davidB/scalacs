@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.alchim31</groupId>
   <artifactId>scalacs</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>ScalaCS</name>
   <description>experimental http server to run tools like compilation (target to replace fsc+fsc-server)</description>
   <inceptionYear>2010</inceptionYear>
@@ -15,6 +15,21 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
+
+  <organization>
+    <name>Alchim31</name>
+    <url>http://alchim31.net/</url>
+  </organization>
+  <developers>
+    <developer>
+      <id>david.bernard</id>
+      <name>David Bernard</name>
+      <timezone>GMT+1</timezone>
+      <roles>
+        <role>Developer</role>
+      </roles>
+    </developer>
+  </developers>
 
   <scm>
     <connection>scm:git:git://github.com/davidB/${project.artifactId}.git</connection>

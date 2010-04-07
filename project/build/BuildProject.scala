@@ -32,6 +32,21 @@ class BuildProject(info: ProjectInfo) extends DefaultProject(info) {
       </license>
     </licenses>
 
+    <organization>
+      <name>Alchim31</name>
+      <url>http://alchim31.net/</url>
+    </organization>
+    <developers>
+      <developer>
+        <id>david.bernard</id>
+        <name>David Bernard</name>
+        <timezone>GMT+1</timezone>
+        <roles>
+          <role>Developer</role>
+        </roles>
+      </developer>
+    </developers>
+
     <scm>
       <connection>scm:git:git://github.com/davidB/{projectName.value}.git</connection>
       <url>http://github.com/davidB/{projectName.value}/</url>
