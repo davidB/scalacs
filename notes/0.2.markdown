@@ -1,0 +1,8 @@
+* provide integration points for maven-scala-plugin (2.14)
+* add primitive support for sbt-launch
+* replace jboss netty to jetty for http service to only have dependency from (maven central repository)
+* sync maven and sbt configuration
+* fix bugs ;)
+* ... (see [commits][commits])
+
+[commits]: http://github.com/davidB/scalacs/commits/master

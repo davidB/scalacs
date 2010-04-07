@@ -1,6 +1,6 @@
 import sbt._
 
-class BuildProject(info: ProjectInfo) extends DefaultProject(info) {
+class BuildProject(info: ProjectInfo) extends DefaultProject(info) with posterous.Publish {
 
   override
   def libraryDependencies = Set(
@@ -17,6 +17,17 @@ class BuildProject(info: ProjectInfo) extends DefaultProject(info) {
   )
 
   lazy val hi = task { println(dependencies); None }
+
+ /**
+  * The content to be posted, transformed into xml. Default implementation is the version notes
+  * followed by the "about" boilerplate in a div of class "about"
+  */
+  override
+  def postBody(vers: String) = (
+    <div class="about"> { mdToXml(aboutNotesPath) } </div>
+    ++ <h3>Changes in {vers}</h3>
+    ++ mdToXml(versionNotesPath(vers))
+  )
 
   // publishing (see http://code.google.com/p/simple-build-tool/wiki/Publishing)
   override
@@ -52,6 +63,9 @@ class BuildProject(info: ProjectInfo) extends DefaultProject(info) {
       <url>http://github.com/davidB/{projectName.value}/</url>
     </scm>
   }
+
+//  override
+//  def publishAction = super.publishAction && publishCurrentNotes
 
   override
   def managedStyle = ManagedStyle.Maven
