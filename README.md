@@ -20,7 +20,7 @@ Installation
 Copy the latest jar (scalacs-X.Y-withDeps) from :
 
 * [github](http://github.com/davidB/scalacs/downloads)
-* [oss.sonatype.org](http://oss.sonatype.org/content/groups/github/net/alchim31/scalacs). (not yet available)
+* [oss.sonatype.org](http://oss.sonatype.org/content/groups/github/net/alchim31/scalacs).
 
 Server startup
 --------------
@@ -34,8 +34,9 @@ HTTP Interface
 
 Some basic client samples are provided
 
-* shell script : [scalacs.sh](/davidB/scalacs/tree/master/scalacs.sh) (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
 * java class : [BasicHttpScalacsClient.java](/davidB/scalacs/tree/master/src/test/java/net_alchim31_scalacs_client/BasicHttpScalacsClient.java)
+* shell script : [scalacs.sh](/davidB/scalacs/tree/master/src/usage/scalacs.sh) (use [cUrl](http://curl.haxx.se/) to do http request and tr to restore multiline message)
+* emacs : [scalacs.sh](/davidB/scalacs/tree/master/src/usage/scala-cs.el) (need [cUrl](http://curl.haxx.se/) - Thanks to Minh Do Boi
 
 But best is to call http directly from the editor/IDE you used.
 
@@ -100,16 +101,33 @@ Sample :
     - "-deprecation"
 </code></pre>
 
+### list-names
+
+List names of registered projects
+> HTTP GET to : http://127.0.0.1:27616/list-names
+
 ### compile
 
 Request to compile modified projects.
 > HTTP GET to : http://127.0.0.1:27616/compile
+
+Request to compile a set of modified projects (with name match pattern)
+> HTTP GET to : http://127.0.0.1:27616/compile?p=pattern
 
 ### cleanCompiler
 
 Request to clean compiler (cache).
 > HTTP GET to : http://127.0.0.1:27616/cleanCompiler
 
+### remove
+
+De-register a set of project (with name match pattern)
+> HTTP GET to : http://127.0.0.1:27616/remove?p=pattern
+
+### stop
+
+Stop the server
+> HTTP GET to : http://127.0.0.1:27616/stop
 
 Notes
 -----
