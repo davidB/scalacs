@@ -8,7 +8,7 @@ class Main {
 
 //@see http://code.google.com/p/simple-build-tool/wiki/GeneralizedLauncher
 class Main4Launch extends xsbti.AppMain {
-  import actors.Exit
+
   def run(configuration: xsbti.AppConfiguration) = {
 //    // get the version of Scala used to launch the application
 //    val scalaVersion = configuration.provider.scalaProvider.version
