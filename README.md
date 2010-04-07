@@ -25,9 +25,9 @@ Copy the latest jar (scalacs-X.Y-withDeps) from :
 Server startup
 --------------
 
->  java -jar scalacs-0.1-withDeps_sc2.7.7.jar
+>  java -jar scalacs-0.2-withDeps_sc2.7.7.jar
 
-Or use scalacs-0.1.jar + dependencies (listed into pom.xml) from a maven repository.
+Or use scalacs-0.2.jar + dependencies (listed into pom.xml) from the maven central repository.
 
 HTTP Interface
 --------------
@@ -121,9 +121,9 @@ TODO
 
 * deploy scalacs into central repository
 * integrate sbt, ConditionalCompilation (to avoid recompile all) (need to have sbt into Central repository with correct pom.xml)
-* integrate xsbt launcher as bootstrap (need to have xsbti launcher-interface into Central repository with correct pom.xml)
+* integrate xsbt launcher as bootstrap (need to have xsbti launcher-interface into Central repository with correct pom.xml) [DONE]
 * provide support/version for several scala's version
-* integrate scalacs with maven-scala-plugin
+* integrate scalacs with maven-scala-plugin [WIP]
 * integrate scalacs with YaScalaDT
 * streaming ouput, instead of waiting the end of computation
 
