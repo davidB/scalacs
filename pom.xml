@@ -223,12 +223,12 @@
   <distributionManagement>
     <repository>
       <id>oss.sonatype.org-releases</id>
-      <name>OSSRH Release Repository</name>
+      <name>OSSRH Release</name>
       <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
     </repository>
     <snapshotRepository>
       <id>oss.sonatype.org-snapshots</id>
-      <name>OSSRH Snapshot Repository</name>
+      <name>OSSRH Snapshot</name>
       <url>http://oss.sonatype.org/content/repositories/github-snapshots</url>
       <uniqueVersion>false</uniqueVersion>
     </snapshotRepository>
