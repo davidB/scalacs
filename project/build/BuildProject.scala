@@ -12,7 +12,7 @@ class BuildProject(info: ProjectInfo) extends DefaultProject(info) {
     "commons-io" % "commons-io" % "1.3.2" % "test->default",
     "commons-lang" % "commons-lang" % "2.4" % "test->default",
 
-    "org.scala-tools.sbt" % "launcher-interface" % "0.7.2" % "provided"
+    "org.scala-tools.sbt" % "launcher-interface" % "0.7.3" % "provided"
     //"org.scala-tools.sbt" % "sbt-launch" % "0.7.2" % "provided"
   )
 
