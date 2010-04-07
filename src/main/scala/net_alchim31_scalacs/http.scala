@@ -105,11 +105,18 @@ class CompilerHandler extends AbstractHandler {
   //TODO refactor to in/out eventCollector
   def action(eventCollector : EventCollector, act : String, request : HttpServletRequest) : Option[HttpStatus.Code] = {
     import java.util.regex.Pattern
+    import scala._
     def findProject() : Option[Pattern] = {
       request.getParameterValues("p") match {
         case null => None
         case l : Array[String]  if l.length == 1 && l(0) != null && !l(0).isEmpty => Some(Pattern.compile(l(0)))
         case _ => None
+      }
+    }
+    def findParam(k : String) : Option[String] = {
+      request.getParameter(k) match {
+        case null => None
+        case x => Some(x)
       }
     }
 
@@ -231,12 +238,20 @@ class CompilerHandler extends AbstractHandler {
         val str = new StringBuilder()
         val runId = System.currentTimeMillis
         val fbs = findProject() match {
-          case Some(p) => _compilerSrv.compileByName(p, runId, true, Nil)
+          case Some(p) => _compilerSrv.compileByName(p, runId, findParam("noDependencies").getOrElse("false").toBoolean, Nil)
           case None => _compilerSrv.compile(runId, true, Nil)
         }
         for (fb <- fbs) {
           eventCollector.addAll(fb.events)
         }
+        None
+      }
+      case "list-names" => {
+        val prjs = findProject() match {
+          case Some(p) => actLog.info("use pattern " + p); _compilerSrv.findByName(p)
+          case None => _compilerSrv.findAll()
+        }
+        actLog.info("found : "+ prjs.map(_.cfg.name).mkString(","))
         None
       }
       case unknown => {
