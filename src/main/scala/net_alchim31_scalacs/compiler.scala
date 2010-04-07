@@ -67,6 +67,7 @@ class CompilerService4Group extends CompilerService {
 
   def size = _group.size
 
+  def findAll() = _group
   def findByName(p : Pattern) = _group.filter(i => p.matcher(i.cfg.name).matches())
 
   def findByTargetDir(f : File) = {
@@ -188,7 +189,7 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
   def compile(runId : Long, checkDeps : Boolean, previousFeedback : List[CompileFeedback]) : List[CompileFeedback] = {
     import java.io.{PrintWriter, StringWriter, StringReader, BufferedReader}
 
-    if (runId <= _lastCompileFeedback.runId) {
+    if (runId < _lastCompileFeedback.runId) {
       throw new Exception("old runId ('" + runId +"') requested after '" + _lastCompileFeedback.runId +"'")
     }
     if (runId == _lastCompileFeedback.runId) {
@@ -274,7 +275,10 @@ class CompilerService4Single(val cfg : SingleConfig, val allCompilerService : Op
         cfg.sourceDirs.flatMap(f => List("-sourcepath", f.getAbsolutePath)) :::
         files.map(_.getAbsolutePath)
 
-      eventLogger.info("Compiling " + files.length + " source files from " + cfg.targetDir)
+      eventLogger.info("Compiling " + files.length + " source files to " + cfg.targetDir)
+      cfg.sourceDirs.foreach { s =>
+        eventLogger.log(LogLevel.INFO, "compiling", Some(SrcLocation(s, -1, -1, -1, 0)))
+      }
 
       val command = new OfflineCompilerCommand(args, new Settings(eventLogger.error), eventLogger.error, false)
       val reporter = new CompilerLoggerAdapter(command.settings, eventLogger)
