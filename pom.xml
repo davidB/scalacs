@@ -2,10 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>net.alchim31</groupId>
   <artifactId>scalacs</artifactId>
-  <version>0.3-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <name>ScalaCS</name>
   <description>experimental http server to run tools like compilation (target to replace fsc+fsc-server)</description>
   <inceptionYear>2010</inceptionYear>
+  <url>http://github.com/davidB/${project.artifactId}</url>
 
   <licenses>
     <license>
@@ -33,14 +34,6 @@
     <maven.compiler.target>1.5</maven.compiler.target>
     <mainClass>net_alchim31_scalacs.Main</mainClass>
   </properties>
-
-  <repositories>
-    <repository>
-      <id>scala-tools.org</id>
-      <name>Scala-Tools Maven2 Repository</name>
-      <url>http://scala-tools.org/repo-releases</url>
-    </repository>
-  </repositories>
 
   <dependencies>
     <dependency>
@@ -126,28 +119,6 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>1.3.1</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>withDeps_sc${scala.version}</shadedClassifierName>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>${mainClass}</mainClass>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.5</version>
         <configuration>
@@ -163,13 +134,42 @@
         <artifactId>maven-scala-plugin</artifactId>
         <version>2.13.1</version>
         <configuration>
-          <vscaladocVersion>${project.version}</vscaladocVersion>
+          <vscaladocVersion>1.2-SNAPSHOT</vscaladocVersion>
         </configuration>
       </plugin>
     </plugins>
   </reporting>
 
   <profiles>
+    <profile>
+      <id>withDeps</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>1.3.1</version>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>shade</goal>
+                </goals>
+                <configuration>
+                  <shadedArtifactAttached>true</shadedArtifactAttached>
+                  <shadedClassifierName>withDeps_sc${scala.version}</shadedClassifierName>
+                  <transformers>
+                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                      <mainClass>${mainClass}</mainClass>
+                    </transformer>
+                  </transformers>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <activation>
